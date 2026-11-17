@@ -1033,3 +1033,35 @@ code { font-size: .88em; padding: .1rem .3rem; border-radius: 4px; background: v
     max-height: calc(100vh - var(--topbar-height) - var(--tabbar-height) - env(safe-area-inset-bottom) - 1.5rem);
   }
 }
+
+/* Einstellungen → Entwickler: server log */
+.log-list {
+  max-height: 32rem;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius, .5rem);
+  background: var(--surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .78rem;
+}
+.log-entry {
+  display: grid;
+  grid-template-columns: max-content max-content 1fr;
+  align-items: start;
+  gap: .5rem;
+  padding: .3rem .6rem;
+  border-bottom: 1px solid var(--border);
+}
+.log-entry:last-child { border-bottom: 0; }
+.log-entry .badge { margin: 0; }
+.log-time { color: var(--muted); white-space: nowrap; }
+.log-message { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
+.log-error .log-message { color: var(--danger); }
+.log-warning .log-message { color: var(--warn); }
+.log-debug .log-message { color: var(--muted); }
+.log-list > .muted, .log-list > .error-text { padding: .6rem; }
+@media (max-width: 500px) {
+  .log-entry { grid-template-columns: max-content 1fr; }
+  .log-entry .log-message { grid-column: 1 / -1; }
+  .log-date { display: none; }
+}

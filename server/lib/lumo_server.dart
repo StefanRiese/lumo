@@ -35,3 +35,4 @@ export 'src/sync/cache_keys.dart';
 export 'src/sync/sync_service.dart';
 export 'src/update/update_service.dart';
 export 'src/util/failure.dart';
+export 'src/util/log_buffer.dart';

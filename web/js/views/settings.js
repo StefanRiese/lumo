@@ -12,7 +12,7 @@ import { accountGroup, addChildGroup } from './accounts.js';
 import { messageArea } from './forms.js';
 import { createForm } from './settings-form.js';
 import {
-  accessGroup, calendarGroup, colorsGroup, mealsGroup, notifyGroup, restartGroup, restartServer, substitutionsGroup,
+  accessGroup, calendarGroup, colorsGroup, developerGroup, mealsGroup, notifyGroup, restartGroup, restartServer, substitutionsGroup,
   syncGroup, updateGroup,
 } from './settings-groups.js';
 
@@ -92,6 +92,7 @@ export async function render(ctx) {
       accessGroup({ ...base, desktop: server.desktop }),
       restartGroup({ form, server }),
       update && !update.available ? updateGroup({ ...base, status: update }) : null,
+      developerGroup(),
     ]),
     konto: panelOf('konto', [
       accountPart.el,

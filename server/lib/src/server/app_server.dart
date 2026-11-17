@@ -31,6 +31,7 @@ import '../sync/cache_keys.dart';
 import '../sync/sync_service.dart';
 import '../update/update_service.dart';
 import '../util/failure.dart';
+import '../util/log_buffer.dart';
 
 /// Log sink: one line, [isError] for stderr-like messages.
 typedef LogLine = void Function(String line, bool isError);
@@ -172,7 +173,15 @@ class AppServer implements ServerControl {
     Future<bool> Function(Uri server)? ntfyProbe,
     HttpGet? updateGet,
   }) async {
-    void info(String m) => log('${DateTime.now().toIso8601String()} $m', false);
+    // Every line also goes to the buffer behind *Einstellungen → Entwickler*.
+    final logs = LogBuffer();
+    void emit(String line, bool isError) {
+      logs.add(line, isError);
+      log(line, isError);
+    }
+
+    void info(String m) =>
+        emit('${DateTime.now().toIso8601String()} $m', false);
     final makeGateway =
         gateway ??
         (c) => LiblanisGateway(
@@ -260,12 +269,13 @@ class AppServer implements ServerControl {
       webDir: webDir,
       embeddedWeb: embedded,
       passwordIterations: passwordIterations,
+      logs: logs,
     );
 
     final HttpServer http;
     try {
       final handler = const Pipeline()
-          .addMiddleware(logRequests(logger: log))
+          .addMiddleware(logRequests(logger: emit))
           .addHandler(api.handler);
       http = await _listen(handler, config.host, config.port);
     } on Object {
@@ -300,7 +310,7 @@ class AppServer implements ServerControl {
       makeMeals,
       makeUntis,
       schools ?? SchoolDirectory(),
-      log,
+      emit,
       config,
       update,
       onRestart,

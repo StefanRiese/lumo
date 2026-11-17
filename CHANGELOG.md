@@ -6,6 +6,11 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Added
+- *Einstellungen → Entwickler*: shows the server log (the last 1000 lines since the start),
+  filtered by Fehler / Warnung / Info / Debug and by text. Debug shows the requests to the
+  server. New endpoint `GET /api/logs`.
+
 ## [0.22.0] – 2026-11-17
 
 ### Added

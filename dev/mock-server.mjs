@@ -248,6 +248,20 @@ function courseDetails(id) {
   return { course, history, ...gradesByCourse[id], attendance: { 'Fehlstunden': '2', 'davon unentschuldigt': '0' } };
 }
 
+/** Invented log lines (newest first) for the developer section. */
+function mockLogs() {
+  const lines = [
+    ['debug', 'GET     [200] /api/substitutions'], ['info', '[1] notify substitutions: 2 neue Vertretungen'],
+    ['debug', 'GET     [200] /api/calendar?from=2026-11-01&to=2026-11-30'],
+    ['warning', 'Update check failed: SocketException: Failed host lookup: api.github.com'],
+    ['debug', 'POST    [401] /api/auth/login'], ['info', 'Settings changed: POLL_INTERVAL_MINUTES'],
+    ['error', 'sync error: SphUnavailableException: Schulportal nicht erreichbar\n#0 SyncService._run (sync_service.dart:283)\n#1 Timer._run'],
+    ['info', 'Listening on http://0.0.0.0:8080, embedded web UI'],
+  ];
+  return lines.map(([level, message], i) => ({ id: lines.length - i, level, message,
+    time: new Date(Date.now() - i * 7 * 60e3).toISOString() }));
+}
+
 function calendar(from, to) {
   const base = new Date(from);
   const events = [];
@@ -516,6 +530,14 @@ async function handleApi(req, res, url) {
   if (req.method === 'POST' && path === '/api/refresh') {
     simulateSync();
     return json(res, 202, { refreshing: true });
+  }
+  if (path === '/api/logs') {
+    const levels = (url.searchParams.get('level') ?? '').split(',').filter(Boolean);
+    const q = (url.searchParams.get('suche') ?? '').toLowerCase();
+    const limit = Number(url.searchParams.get('limit') ?? 200);
+    const data = mockLogs().filter((e) => (!levels.length || levels.includes(e.level))
+      && (!q || e.message.toLowerCase().includes(q))).slice(0, limit);
+    return json(res, 200, { data, capacity: 1000 });
   }
   if (path === '/api/sync') {
     const ago = (min) => new Date(Date.now() - min * 60e3).toISOString();

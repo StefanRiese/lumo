@@ -621,6 +621,36 @@ Restarts the server: `202 {"restarting": true}`, then the server is away for a f
 a login. `409 restart_unsupported` where the server cannot restart itself (started by hand);
 `GET /api/server-settings` tells with `canRestart`.
 
+## Server log
+
+### `GET /api/logs`
+
+The most recent log lines of the server (the last 1000 since the start, kept in memory), newest
+first. Needs a login; not tied to an account. The web UI shows them in *Einstellungen →
+Entwickler*.
+
+| Parameter | Default | |
+|---|---|---|
+| `level` | all | comma-separated: `debug`, `info`, `warning`, `error` |
+| `suche` | – | text in the message, case-insensitive |
+| `limit` | 200 | 1–1000 |
+
+```json
+{
+  "data": [
+    {"id": 812, "time": "2026-11-17T07:47:42.000Z", "level": "error",
+     "message": "sync error: SphUnavailableException: …\n#0 …"}
+  ],
+  "capacity": 1000
+}
+```
+
+The server's log has no levels of its own, so the level is derived from the line: lines of the
+error stream and HTTP requests that end with `5xx` are `error`, other requests (they contain the
+path and query) are `debug`, messages with „error“, „unhandled“ or „exception“ are `error`,
+messages with „failed“ or „cannot“ are `warning`, everything else is `info`. Invalid `level` or
+`limit` → `400 bad_request`.
+
 ## App updates
 
 The server looks for new releases of Lumo on GitHub (every 12 hours with

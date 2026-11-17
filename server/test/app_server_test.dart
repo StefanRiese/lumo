@@ -277,6 +277,22 @@ void main() {
       expect(jsonEncode(accounts.body), isNot(contains('geheim')));
     });
 
+    test('the log is readable in the web UI, without secrets', () async {
+      final s = await start();
+      final cookie = await completeSetup(s);
+      final all = await call('GET', '/api/logs', cookie: cookie);
+      expect(all.status, 200);
+      final messages = [for (final e in all.body['data'] as List) e['message']];
+      expect(messages, anyElement(startsWith('Listening on')));
+      expect(messages, anyElement(contains('Setup done')));
+      expect(messages, anyElement(contains('[201] /api/accounts')));
+      final info = await call('GET', '/api/logs?level=info', cookie: cookie);
+      expect(info.body['data'], everyElement(containsPair('level', 'info')));
+      expect(jsonEncode(all.body), isNot(contains('geheim')));
+      expect(jsonEncode(all.body), isNot(contains('web-passwort')));
+      expect((await call('GET', '/api/logs')).status, 401);
+    });
+
     test('the web password first, then the account, also ends it', () async {
       final s = await start();
       var r = await call(

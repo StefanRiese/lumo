@@ -2,7 +2,7 @@
 // Controls register with the form (settings-form.js); saving is done once by
 // the page. Buttons in here only run actions (login test, update).
 
-import { api, ApiError } from '../api.js';
+import { api, ApiError, errorMessage } from '../api.js';
 import { h, empty } from '../dom.js';
 import { age } from '../format.js';
 import {
@@ -551,6 +551,75 @@ export async function restartServer({ form, button, msg }) {
   }
   button.disabled = false;
   msg.error(new ApiError(0, 'network', 'Der Server antwortet noch nicht. Bitte die Seite später neu laden und gegebenenfalls das Protokoll prüfen.'));
+}
+
+// --- Entwickler (server log) ---------------------------------------------------------------
+
+const LOG_LEVELS = [['error', 'Fehler', 'danger'], ['warning', 'Warnung', 'warn'], ['info', 'Info', 'info'], ['debug', 'Debug', '']];
+
+/**
+ * The recent log lines of the server, newest first, filtered by level and text. Nothing here is
+ * saved with the page: the list only reads (GET /api/logs, the server keeps the last 1000 lines).
+ */
+export function developerGroup() {
+  const shown = new Set(['error', 'warning', 'info']); // debug = the HTTP requests: off by default
+  const list = h('div', { class: 'log-list', role: 'log', 'aria-live': 'off', tabindex: '0', 'aria-label': 'Server-Protokoll' });
+  const info = h('span', { class: 'muted log-info' });
+  const search = input({ type: 'search', placeholder: 'Im Protokoll suchen …', 'aria-label': 'Im Protokoll suchen', maxlength: '60' });
+  let timer = null;
+  let token = 0;
+
+  const load = async () => {
+    const mine = ++token;
+    const params = new URLSearchParams({ level: [...shown].join(','), limit: '300' });
+    if (search.value.trim()) params.set('suche', search.value.trim());
+    try {
+      const { data } = await api(`/api/logs?${params}`);
+      if (mine !== token) return; // a newer request is on its way
+      info.textContent = data.length === 1 ? '1 Eintrag' : `${data.length} Einträge`;
+      list.replaceChildren(...(data.length ? data.map(logEntry) : [h('div', { class: 'muted' }, 'Keine Einträge für diese Auswahl.')]));
+    } catch (err) {
+      if (mine !== token) return;
+      info.textContent = '';
+      list.replaceChildren(h('div', { class: 'error-text' }, errorMessage(err)));
+    }
+  };
+
+  const chips = LOG_LEVELS.map(([key, label]) => {
+    const chip = h('button', {
+      type: 'button', class: 'chip pick', 'aria-pressed': String(shown.has(key)),
+      onclick: () => {
+        if (shown.has(key)) shown.delete(key); else shown.add(key);
+        chip.setAttribute('aria-pressed', String(shown.has(key)));
+        load();
+      },
+    }, label);
+    return chip;
+  });
+  search.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(load, 250);
+  });
+  load();
+
+  return group('entwickler', 'Entwickler',
+    'Das Protokoll des Servers (die letzten 1000 Zeilen seit dem Start). Debug zeigt die Anfragen an den Server.',
+    h('div', { class: 'field' },
+      h('span', { class: 'field-label' }, 'Zeigen'),
+      h('div', { class: 'chips', role: 'group', 'aria-label': 'Stufen' }, chips)),
+    h('div', { class: 'inline-fields' }, search,
+      h('button', { type: 'button', class: 'button', onclick: load }, 'Aktualisieren'), info),
+    list);
+}
+
+function logEntry(e) {
+  const [, label, kind] = LOG_LEVELS.find(([key]) => key === e.level) ?? LOG_LEVELS[2];
+  const when = new Date(e.time);
+  return h('div', { class: ['log-entry', `log-${e.level}`] },
+    h('time', { datetime: e.time, class: 'log-time' }, when.toLocaleTimeString('de-DE'), ' ',
+      h('span', { class: 'log-date' }, when.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }))),
+    h('span', { class: ['badge', kind && `badge-${kind}`] }, label),
+    h('span', { class: 'log-message' }, e.message));
 }
 
 /** Restart button; null where the server cannot restart itself (e.g. started by hand). */

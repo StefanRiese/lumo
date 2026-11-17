@@ -19,6 +19,7 @@ import '../sph/errors.dart';
 import '../sph/sph_service.dart';
 import '../util/failure.dart';
 import '../storage/settings_store.dart';
+import '../util/log_buffer.dart';
 import '../sync/cache_keys.dart';
 import '../sync/sync_service.dart';
 import '../untis/compare.dart';
@@ -86,6 +87,7 @@ const _eventPing = Duration(seconds: 25);
 ///   POST /api/restart       restart the server (202; 409 where it cannot)
 /// While the server is not set up, the settings endpoints need the setup
 /// token (header X-Setup-Token) instead of a login.
+///   GET  /api/logs          recent server log lines (level, suche, limit)
 ///   GET  /api/settings      user settings (subject colors, filters)
 ///   PUT  /api/settings      change settings (fields not sent are kept)
 ///   GET  /api/notifications          notification settings + poll status
@@ -137,6 +139,10 @@ class Api {
 
   /// Web UI compiled into the executable; used when [webDir] is null.
   final EmbeddedWeb? embeddedWeb;
+
+  /// Recent log lines for *Einstellungen → Entwickler*; null = not kept
+  /// (tests).
+  final LogBuffer? logs;
 
   /// Notifications; null = disabled.
   Poller? poller;
@@ -191,6 +197,7 @@ class Api {
     SyncService? sync,
     this.control,
     this.passwordIterations,
+    this.logs,
     SettingsStore? settings,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now,
@@ -296,6 +303,7 @@ class Api {
       )
       ..post('/api/refresh', _refresh)
       ..get('/api/sync', _syncStatus)
+      ..get('/api/logs', _logs)
       ..get('/api/events', _events)
       ..get('/api/setup', _setup)
       ..get('/api/server-settings', _getServerSettings)
@@ -851,6 +859,47 @@ class Api {
     }
     s.refreshNow().ignore();
     return _json(202, {'refreshing': true});
+  }
+
+  /// The recent log lines, newest first: `?level=warning,error` (default:
+  /// all), `?suche=` text, `?limit=` (default 200, at most 1000).
+  Response _logs(Request request) {
+    if (!_authorized(request)) {
+      return _error(401, 'unauthorized', 'Login required');
+    }
+    final q = request.url.queryParameters;
+    Set<LogLevel>? levels;
+    final wanted = q['level']?.split(',').map((l) => l.trim().toLowerCase());
+    if (wanted != null && wanted.any((l) => l.isNotEmpty)) {
+      levels = {};
+      for (final name in wanted.where((l) => l.isNotEmpty)) {
+        final level = LogLevel.values.where((l) => l.name == name).firstOrNull;
+        if (level == null) {
+          return _error(
+            400,
+            'bad_request',
+            'level must be debug, info, warning or error',
+          );
+        }
+        levels.add(level);
+      }
+    }
+    final limit = q.containsKey('limit') ? int.tryParse(q['limit']!) : 200;
+    if (limit == null || limit < 1 || limit > LogBuffer.maxQueryLimit) {
+      return _error(
+        400,
+        'bad_request',
+        'limit must be 1–${LogBuffer.maxQueryLimit}',
+      );
+    }
+    final buffer = logs;
+    final entries =
+        buffer?.query(levels: levels, search: q['suche'], limit: limit) ??
+        const <LogEntry>[];
+    return _json(200, {
+      'data': [for (final e in entries) e.toJson()],
+      'capacity': buffer?.capacity ?? 0,
+    });
   }
 
   Response _syncStatus(Request request) {
