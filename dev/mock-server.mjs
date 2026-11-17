@@ -175,7 +175,10 @@ const substitutions = [
       { period: '1 - 2', type: 'Pausenaufsicht', subject: null, previousSubject: null, teacher: 'Lange',
         substitute: 'Krüger', room: 'Hof', previousRoom: null, className: null, note: null },
     ],
-    notices: [{ title: 'Allgemein', lines: ['Wandertag der Klassen 9a und 9b.', '<b>Bitte Sportzeug</b> nicht vergessen!'] }],
+    notices: [
+      { title: 'Allgemein', lines: ['Wandertag der Klassen 9a und 9b.', '<b>Bitte Sportzeug</b> nicht vergessen!'] },
+      { title: 'Von Entfall betroffene Klassen', lines: ['7b, 8a'] },
+    ],
   },
   {
     date: ymd(d2),

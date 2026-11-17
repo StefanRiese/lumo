@@ -84,7 +84,7 @@ first) or by the user on the settings page. Colors are automatic (distinct for u
 or user-defined; both settings are stored on the server (`/api/settings`). Navigation items are hidden when the feature is not enabled for the account.
 
 Vertretungen: the portal's plan contains all classes. The permanent filter (own classes, hidden
-types, hidden notices such as „Allgemein“) is set under *Einstellungen → Vertretungsplan* (`#vertretungsplan`), stored on the server
+types, hidden notices such as „Allgemein“) is set under *Einstellungen → Vertretungsplan* (`#vertretungsplan`), stored on the server (a notice on the Vertretungen page also has an „Ausblenden“ button that adds it)
 and applied by it to `/api/substitutions` and the notifications. Heute shows substitutions in
 the lessons only for entries that name one of the own classes exactly (and match period and
 subject); without own classes nothing is merged into the lessons. The Vertretungen page adds

@@ -1,3 +1,4 @@
+import { api, errorMessage } from '../api.js';
 import { h, empty, icon, textBlock } from '../dom.js';
 import { parseYmd, relativeDay, longDate } from '../format.js';
 import { classesOf, matchesText, planValues } from '../substitution-filter.js';
@@ -44,7 +45,7 @@ export async function render(ctx) {
     counter.textContent = count === total
       ? `${total} Eintr${total === 1 ? 'ag' : 'äge'}`
       : `${count} von ${total} Einträgen`;
-    list.replaceChildren(...renderDays(shown, total > 0 && count === 0));
+    list.replaceChildren(...renderDays(shown, total > 0 && count === 0, !all));
     reset.hidden = isDefault(filter);
   };
 
@@ -125,7 +126,39 @@ export async function render(ctx) {
   return h('div', null, pageHeader('Vertretungen'), scope, filters, list);
 }
 
-function renderDays(days, filteredAway) {
+/**
+ * Adds [title] to the notices hidden by the permanent filter (the same list as in the settings,
+ * for the shown child) and reloads the page.
+ */
+async function hideNotice(title) {
+  const { substitutionFilter: current = {} } = await api('/api/settings');
+  const hidden = current.hiddenNotices ?? [];
+  if (!hidden.some((t) => t.toLowerCase() === title.toLowerCase())) hidden.push(title);
+  // The whole filter is sent: fields left out would be reset.
+  await api('/api/settings', { method: 'PUT', body: { substitutionFilter: { ...current, hiddenNotices: hidden } } });
+  window.dispatchEvent(new Event('lumo:reload-page'));
+}
+
+/** Notice heading with a button that hides all notices of that heading for good. */
+function noticeHead(title, canHide) {
+  if (!canHide) return h('strong', null, title);
+  const button = h('button', {
+    type: 'button', class: 'button small notice-hide',
+    title: `„${title}“ auf allen Tagen und Geräten ausblenden. Rückgängig: Einstellungen → Vertretungen.`,
+    onclick: async () => {
+      button.disabled = true;
+      try {
+        await hideNotice(title);
+      } catch (err) {
+        button.disabled = false;
+        button.textContent = errorMessage(err);
+      }
+    },
+  }, 'Ausblenden');
+  return h('div', { class: 'notice-head' }, h('strong', null, title), button);
+}
+
+function renderDays(days, filteredAway, canHide) {
   if (days.length === 0) return [empty('Aktuell keine Vertretungen.')];
   if (filteredAway && days.every((d) => d.notices.length === 0)) {
     return [empty('Keine Einträge für diese Filter.')];
@@ -137,7 +170,7 @@ function renderDays(days, filteredAway) {
       h('div', { class: 'section-head' },
         h('h2', null, rel === longDate(date) ? rel : `${rel} – ${longDate(date)}`)),
       day.notices.map((n) => h('div', { class: 'notice' },
-        h('strong', null, n.title), textBlock(n.lines.join('<br>')))),
+        noticeHead(n.title, canHide), textBlock(n.lines.join('<br>')))),
       day.entries.length
         ? h('div', { class: 'stack' }, day.entries.map(substitutionCard))
         : empty('Keine Vertretungen.'),

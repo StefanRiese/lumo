@@ -6,6 +6,11 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Added
+- *Vertretungen*: every notice (e.g. „Von Entfall betroffene Klassen“) has an „Ausblenden“ button
+  that adds its heading to the hidden notices of the child. Undo under *Einstellungen →
+  Vertretungen*. Not shown with „Alle Klassen“ (`?alle=1`), which ignores the filter.
+
 ## [0.25.0] – 2026-11-17
 
 ### Changed

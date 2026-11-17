@@ -483,6 +483,8 @@ function switchAccount(id) {
 }
 
 window.addEventListener('lumo:switch-account', (e) => switchAccount(e.detail));
+/** A view changed something that shows on its own page (e.g. a hidden notice): load it anew. */
+window.addEventListener('lumo:reload-page', () => renderRoute({ focus: false, quiet: true }));
 
 /** Accounts were added, changed or removed (the list in `accounts` is current). */
 window.addEventListener('lumo:accounts-changed', (e) => {
