@@ -3,9 +3,9 @@
 - [ ] Windows app: the restart button of the web UI restarts like the tray item „Neu starten“
 - [ ] parent accounts: several children in one parent account – only the first pupil is shown (the page has one block per pupil); show all of them, e.g. as one Lumo account per pupil
 - [ ] liblanis issue #4 (parent accounts: the timetable is student-only in `Applets`, the course overview has per-pupil ids `mappen<id>`, links carry `&p=<pupil>`): https://github.com/lanis-mobile/liblanis/issues/4 – filed 2026-11-11, no reply yet; `portal_fixes.dart` and `appletsOfAccount` work around it until then
-- [ ] liblanis issues #5 (parse errors are swallowed as „Unknown error“: https://github.com/lanis-mobile/liblanis/issues/5) and #6 (parent accounts: every homework counts as done: https://github.com/lanis-mobile/liblanis/issues/6) – filed 2026-11-11, no reply yet; `portal_fixes.dart` works around #6 until then
+- [ ] liblanis issue #6 (parent accounts: every homework counts as done): https://github.com/lanis-mobile/liblanis/issues/6 – filed 2026-11-11, no reply yet; `portal_fixes.dart` works around it until then
 - [ ] test the tray menu (Windows) and the menu bar item (macOS) „Einstellungen“: they now open `/einstellungen` directly
-- [ ] remove `server/lib/src/sph/portal_fixes.dart` and `appletsOfAccount` once liblanis is fixed (issues #3, #4 and #6, all open, no reply yet; liblanis 0.1.4 is still the latest, last commit 27 Oct)
+- [ ] remove `server/lib/src/sph/portal_fixes.dart` and `appletsOfAccount` once liblanis is fixed (issues #4 and #6, open, no reply yet; #3 and #5 are fixed in liblanis 0.1.5, the #3 workaround is gone)
 - [ ] WebUntis: lessons without a period of the time grid have no period and are not merged into the lessons on Heute (check how often this happens)
 - [ ] WebUntis: after the Schulportal adds an entry that WebUntis had supplied, one extra notification is possible
 
