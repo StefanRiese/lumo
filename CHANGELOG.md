@@ -6,6 +6,8 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.24.0] – 2026-11-17
+
 ### Added
 - Notification „Abgleich fehlgeschlagen“ when a part of the data (Stundenplan, Vertretungen, …)
   could not be loaded three times in a row, e.g. because the portal changed its pages. New
