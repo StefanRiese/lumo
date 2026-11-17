@@ -46,6 +46,7 @@ const sessions = new Set();
 let settings = {
   subjectColors: {}, courseSubjects: {},
   substitutionFilter: { classes: [], showUnassigned: false, hiddenTypes: [], hiddenNotices: [] },
+  calendarFilter: { hiddenTitles: [] },
 };
 const doneOverrides = new Map(); // "course/entry" → done
 const fetched = new Map(); // cache key → fetchedAt (ISO)
@@ -55,7 +56,8 @@ let syncRunning = false;
 // The first one answers the paths without account. MOCK_CHILDREN=1 adds "Mia" (no
 // calendar, no school meals, fewer homework entries); MOCK_SETUP=1 starts without accounts.
 const newSettings = () => ({ subjectColors: {}, courseSubjects: {},
-  substitutionFilter: { classes: [], showUnassigned: false, hiddenTypes: [], hiddenNotices: [] } });
+  substitutionFilter: { classes: [], showUnassigned: false, hiddenTypes: [], hiddenNotices: [] },
+  calendarFilter: { hiddenTitles: [] } });
 const accountsMap = new Map();
 if (!setupRequired) {
   accountsMap.set('max001', { id: 'max001', name: 'max.muster', schoolId: 9999, username: 'max.muster',
@@ -102,6 +104,7 @@ const localIso = (d) => `${ymd(d)}T${p(d.getHours())}:${p(d.getMinutes())}:00.00
 const today = new Date();
 today.setHours(0, 0, 0, 0);
 const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const startOfWeekMon = (d) => addDays(d, -((d.getDay() + 6) % 7));
 const nextSchoolDay = (d) => {
   let x = addDays(d, 1);
   while (x.getDay() === 0 || x.getDay() === 6) x = addDays(x, 1);
@@ -258,6 +261,12 @@ function calendar(from, to) {
       { id: `${ymd(m)}-3`, title: 'Bundesjugendspiele', description: '',
         start: localIso(at(day(22), 8)), end: localIso(at(day(22), 13)), allDay: false, place: 'Sportplatz', category: 'Schulveranstaltung' },
     );
+  }
+  // Week markers like the school enters them: every Monday, alternating.
+  for (let d = startOfWeekMon(base); d <= to; d = addDays(d, 7)) {
+    const a = Math.round(d / 604800000) % 2 === 0;
+    events.push({ id: `week-${ymd(d)}`, title: a ? 'A-Woche' : 'B-Woche', description: '',
+      start: localIso(d), end: localIso(addDays(d, 1)), allDay: true, place: null, category: null });
   }
   events.push({ id: 'soon', title: 'Vokabeltest Englisch', description: '', start: localIso(at(addDays(today, 2), 9, 45)),
     end: localIso(at(addDays(today, 2), 10, 30)), allDay: false, place: null, category: 'Termine' });
@@ -435,6 +444,7 @@ async function handleApi(req, res, url) {
         classes: list(f.classes), showUnassigned: f.showUnassigned === true,
         hiddenTypes: list(f.hiddenTypes), hiddenNotices: list(f.hiddenNotices),
       },
+      calendarFilter: { hiddenTitles: list((body.calendarFilter ?? current.calendarFilter).hiddenTitles) },
     };
     child.settings = next;
     return json(res, 200, next);
@@ -608,7 +618,10 @@ async function handleApi(req, res, url) {
       const from = url.searchParams.get('from') ? new Date(`${url.searchParams.get('from')}T00:00`) : today;
       const to = url.searchParams.get('to') ? new Date(`${url.searchParams.get('to')}T00:00`) : addDays(today, 60);
       const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      return data(res, `calendar:${ymd(from)}:${ymd(to)}`, calendar(from, to));
+      // The permanent filter of the settings (hidden titles) is applied like on the real server.
+      const hidden = child.settings.calendarFilter.hiddenTitles.map((t) => t.toLowerCase());
+      const shown = calendar(from, to).filter((e) => !hidden.some((t) => e.title.toLowerCase().includes(t)));
+      return data(res, `calendar:${ymd(from)}:${ymd(to)}`, shown);
     }
   }
   const m = /^\/api\/courses\/([^/]+)$/.exec(path);

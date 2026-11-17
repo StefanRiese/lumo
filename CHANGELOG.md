@@ -6,6 +6,10 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Added
+- *Einstellungen → Kalender*: hide calendar entries by their title, e.g. the week markers „A-Woche“
+  and „B-Woche“. Applies on all devices (for the child of the tab) in the calendar and on *Heute*.
+
 ## [0.21.1] – 2026-11-17
 
 ### Changed

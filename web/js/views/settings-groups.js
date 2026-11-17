@@ -115,6 +115,58 @@ export function substitutionsGroup({ form, saved, plan }) {
     'Gilt auf allen Geräten, für das Kind dieses Reiters.', parts);
 }
 
+// --- Kalender (hidden entries) ----------------------------------------------------------------
+
+/**
+ * Calendar entries to hide by (part of) their title, e.g. the week markers „A-Woche“ and
+ * „B-Woche“. Stored on the server like the substitution filter; [titles] are the titles of
+ * the current calendar, offered while typing.
+ */
+export function calendarGroup({ form, saved, titles }) {
+  const filter = { hiddenTitles: [...(saved?.hiddenTitles ?? [])] };
+  form.add('personal', 'calendarFilter', () => stable(filter));
+
+  const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Ausgeblendete Termine' });
+  const text = input({ id: 'cal-hide-title', maxlength: '60', list: 'cal-hide-suggestions', placeholder: 'z. B. A-Woche' });
+  const suggestions = h('datalist', { id: 'cal-hide-suggestions' },
+    [...new Set(titles)].sort(byName).map((t) => h('option', { value: t })));
+  const render = () => {
+    chips.replaceChildren(...filter.hiddenTitles.map((t) => h('button', {
+      type: 'button', class: 'chip pick', 'aria-pressed': 'true', title: 'Wieder anzeigen',
+      onclick: () => {
+        filter.hiddenTitles.splice(filter.hiddenTitles.indexOf(t), 1);
+        render();
+      },
+    }, t)));
+    form.touch();
+  };
+  const add = () => {
+    const value = text.value.trim();
+    if (!value) return;
+    if (!filter.hiddenTitles.some((t) => t.toLowerCase() === value.toLowerCase()) && filter.hiddenTitles.length < 30) {
+      filter.hiddenTitles.push(value);
+    }
+    text.value = '';
+    render();
+  };
+  text.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault(); // Enter adds the term; it must not save the page
+    add();
+  });
+  render();
+
+  return group('kalender', 'Kalender',
+    'Gilt auf allen Geräten, für das Kind dieses Reiters.',
+    h('div', { class: 'field' },
+      h('label', { for: 'cal-hide-title' }, 'Termine ausblenden, deren Titel enthält'),
+      h('div', { class: 'inline-fields' }, text, suggestions,
+        h('button', { type: 'button', class: 'button', onclick: add }, 'Hinzufügen')),
+      h('span', { class: 'field-hint' },
+        'Groß- und Kleinschreibung egal, z. B. „A-Woche“ und „B-Woche“. Ein Klick auf einen Begriff zeigt die Termine wieder an.')),
+    chips);
+}
+
 // --- Schulessen ---------------------------------------------------------------------------
 
 /** The balance warning of the school meals page (all children). The logins are part of each child. */

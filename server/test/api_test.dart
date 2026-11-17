@@ -396,6 +396,7 @@ void main() {
             'hiddenTypes': <Object?>[],
             'hiddenNotices': <Object?>[],
           },
+          'calendarFilter': {'hiddenTitles': <Object?>[]},
         });
 
         r = await put({
@@ -466,12 +467,53 @@ void main() {
         {
           'substitutionFilter': {'showUnassigned': 'ja'},
         },
+        {'calendarFilter': []},
+        {
+          'calendarFilter': {
+            'hiddenTitles': [''],
+          },
+        },
+        {
+          'calendarFilter': {'hiddenTitles': 'A-Woche'},
+        },
         'not json',
       ]) {
         final r = await put(bad);
         expect(r.statusCode, 400, reason: '$bad');
       }
       expect((await put({}, type: 'text/plain')).statusCode, 415);
+    });
+
+    test('hidden calendar titles: saved, applied to the calendar', () async {
+      Future<List> titles() async {
+        final r = await send('GET', '/api/calendar', cookie: cookie);
+        return [for (final e in (await body(r))['data'] as List) e['title']];
+      }
+
+      expect(await titles(), containsAll(['Elternabend', 'Ferien']));
+      final r = await put({
+        'calendarFilter': {
+          'hiddenTitles': [' ferien ', 'FERIEN', 'x'],
+        },
+      });
+      expect((await body(r))['calendarFilter'], {
+        'hiddenTitles': ['ferien', 'x'],
+      });
+      expect(await titles(), ['Elternabend']);
+      // Parts of a title count too; other fields keep the filter.
+      await put({
+        'calendarFilter': {
+          'hiddenTitles': ['abend'],
+        },
+      });
+      await put({
+        'subjectColors': {'M': '#112233'},
+      });
+      expect(await titles(), ['Ferien']);
+      await put({
+        'calendarFilter': {'hiddenTitles': <String>[]},
+      });
+      expect(await titles(), containsAll(['Elternabend', 'Ferien']));
     });
 
     test('requires login', () async {

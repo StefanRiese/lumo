@@ -86,7 +86,7 @@ const _eventPing = Duration(seconds: 25);
 ///   POST /api/restart       restart the server (202; 409 where it cannot)
 /// While the server is not set up, the settings endpoints need the setup
 /// token (header X-Setup-Token) instead of a login.
-///   GET  /api/settings      user settings (subject colors)
+///   GET  /api/settings      user settings (subject colors, filters)
 ///   PUT  /api/settings      change settings (fields not sent are kept)
 ///   GET  /api/notifications          notification settings + poll status
 ///   POST /api/notifications/test     send a test notification
@@ -753,8 +753,10 @@ class Api {
   /// `?suche=` for calendar and homework, like on the web UI pages.
   Map<String, Object?> _searchCalendar(Object? value, Request request) {
     if (value is! List<CalendarEntry>) return const {};
-    final found = filterCalendarByQuery(value, request.url.queryParameters);
-    return found == null ? const {} : {'data': found};
+    // The permanent filter from the settings (hidden titles), then the URL's.
+    final shown = settings.load().calendarFilter.apply(value);
+    final found = filterCalendarByQuery(shown, request.url.queryParameters);
+    return {'data': found ?? shown};
   }
 
   Map<String, Object?> _searchHomework(Object? value, Request request) {

@@ -12,7 +12,7 @@ import { accountGroup, addChildGroup } from './accounts.js';
 import { messageArea } from './forms.js';
 import { createForm } from './settings-form.js';
 import {
-  accessGroup, colorsGroup, mealsGroup, notifyGroup, restartGroup, restartServer, substitutionsGroup,
+  accessGroup, calendarGroup, colorsGroup, mealsGroup, notifyGroup, restartGroup, restartServer, substitutionsGroup,
   syncGroup, updateGroup,
 } from './settings-groups.js';
 
@@ -30,7 +30,7 @@ export async function render(ctx) {
   } catch (err) {
     return h('div', null, pageHeader('Einstellungen'), errorBox(errorMessage(err)));
   }
-  const [personal, sync, update, timetable, courses, plan] = await Promise.all([
+  const [personal, sync, update, timetable, courses, plan, calendar] = await Promise.all([
     api('/api/settings'),
     api('/api/sync').catch(() => null),
     api('/api/update').catch(() => null),
@@ -42,6 +42,10 @@ export async function render(ctx) {
     ctx.features.has('substitutions')
       ? api('/api/substitutions?alle=1').then((r) => r.data, () => [])
       : Promise.resolve(null),
+    // Titles to suggest for hiding calendar entries.
+    ctx.features.has('calendar')
+      ? api('/api/calendar').then((r) => r.data.map((e) => e.title), () => [])
+      : Promise.resolve([]),
   ]);
   initColors({ settings: personal, subjects: timetable?.lessons?.map((l) => l.subject) ?? [], courses });
 
@@ -93,6 +97,9 @@ export async function render(ctx) {
       accountPart.el,
       ctx.features.has('substitutions')
         ? substitutionsGroup({ ...base, saved: personal.substitutionFilter, plan })
+        : null,
+      ctx.features.has('calendar')
+        ? calendarGroup({ ...base, saved: personal.calendarFilter, titles: [...calendar, ...(personal.calendarFilter?.hiddenTitles ?? [])] })
         : null,
       ctx.features.has('lessons') || ctx.features.has('timetable') ? colorsGroup(base) : null,
     ]),

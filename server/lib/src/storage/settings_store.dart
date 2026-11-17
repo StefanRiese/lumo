@@ -117,6 +117,56 @@ class SubstitutionFilter {
   }
 }
 
+/// Which calendar entries are hidden (e.g. the week markers "A-Woche" and
+/// "B-Woche" the school enters as appointments).
+class CalendarFilter {
+  /// Texts to hide: an entry whose title contains one of them is left out
+  /// (case-insensitive).
+  final List<String> hiddenTitles;
+
+  const CalendarFilter({this.hiddenTitles = const []});
+
+  static const maxEntries = 30;
+  static const maxLength = 60;
+
+  bool get isActive => hiddenTitles.isNotEmpty;
+
+  bool matches(CalendarEntry e) {
+    final title = e.title.toLowerCase();
+    return !hiddenTitles.any((t) => title.contains(t.toLowerCase()));
+  }
+
+  List<CalendarEntry> apply(List<CalendarEntry> entries) =>
+      isActive ? entries.where(matches).toList() : entries;
+
+  Map<String, Object?> toJson() => {'hiddenTitles': hiddenTitles};
+
+  factory CalendarFilter.fromJson(Object? json) {
+    if (json is! Map) {
+      throw const FormatException('calendarFilter must be an object');
+    }
+    final raw = json['hiddenTitles'] ?? const [];
+    if (raw is! List || raw.length > maxEntries) {
+      throw const FormatException(
+        'calendarFilter.hiddenTitles: list of max. $maxEntries',
+      );
+    }
+    final result = <String>[];
+    for (final v in raw) {
+      final t = v is String ? v.trim() : '';
+      if (t.isEmpty || t.length > maxLength) {
+        throw const FormatException(
+          'calendarFilter.hiddenTitles: entries need 1–$maxLength characters',
+        );
+      }
+      if (!result.any((r) => r.toLowerCase() == t.toLowerCase())) {
+        result.add(t);
+      }
+    }
+    return CalendarFilter(hiddenTitles: result);
+  }
+}
+
 /// User settings shared by all browsers (stored in the database).
 class AppSettings {
   /// Subject (timetable abbreviation or course name) → color "#rrggbb".
@@ -129,10 +179,14 @@ class AppSettings {
   /// Filter of the substitution plan (web UI and notifications).
   final SubstitutionFilter substitutionFilter;
 
+  /// Entries hidden in the calendar.
+  final CalendarFilter calendarFilter;
+
   const AppSettings({
     this.subjectColors = const {},
     this.courseSubjects = const {},
     this.substitutionFilter = const SubstitutionFilter(),
+    this.calendarFilter = const CalendarFilter(),
   });
 
   static const maxSubjects = 100;
@@ -144,6 +198,7 @@ class AppSettings {
     'subjectColors': subjectColors,
     'courseSubjects': courseSubjects,
     'substitutionFilter': substitutionFilter.toJson(),
+    'calendarFilter': calendarFilter.toJson(),
   };
 
   /// Parses and validates [json]; throws [FormatException] with a message.
@@ -194,10 +249,14 @@ class AppSettings {
     final filter = json.containsKey('substitutionFilter')
         ? SubstitutionFilter.fromJson(json['substitutionFilter'])
         : base.substitutionFilter;
+    final calendar = json.containsKey('calendarFilter')
+        ? CalendarFilter.fromJson(json['calendarFilter'])
+        : base.calendarFilter;
     return AppSettings(
       subjectColors: colors,
       courseSubjects: courses,
       substitutionFilter: filter,
+      calendarFilter: calendar,
     );
   }
 }

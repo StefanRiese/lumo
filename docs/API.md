@@ -125,7 +125,7 @@ Query parameter for all of them: `?refresh=1` – wait for fresh data from the p
 | `GET /api/account` | [AccountInfo](#accountinfo) | `account` | 6 h |
 | `GET /api/timetable` | [Timetable](#timetable) | `timetable` | 6 h |
 | `GET /api/substitutions` | [SubstitutionDay](#substitutionday)`[]`, filtered | `substitutions` | 15 min |
-| `GET /api/calendar` | [CalendarEntry](#calendarentry)`[]` | `calendar:<from>:<to>` | 1 h (default range) |
+| `GET /api/calendar` | [CalendarEntry](#calendarentry)`[]`, filtered | `calendar:<from>:<to>` | 1 h (default range) |
 | `GET /api/courses` | [Course](#course)`[]` | `courses` | 2 h |
 | `GET /api/courses/{id}` | [CourseDetails](#coursedetails) | `course:<id>` | 2 h |
 | `GET /api/homework` | [Homework](#homework)`[]` | `homework` | 15 min |
@@ -241,7 +241,8 @@ Settings of the web UI, shared by all devices.
 {
   "subjectColors": {"M": "#3b6fd8", "BIO": "#2e9e5b"},
   "courseSubjects": {"104": "M"},
-  "substitutionFilter": {"classes": ["05eG"], "showUnassigned": false, "hiddenTypes": ["Pausenaufsicht"], "hiddenNotices": ["Allgemein"]}
+  "substitutionFilter": {"classes": ["05eG"], "showUnassigned": false, "hiddenTypes": ["Pausenaufsicht"], "hiddenNotices": ["Allgemein"]},
+  "calendarFilter": {"hiddenTitles": ["A-Woche", "B-Woche"]}
 }
 ```
 
@@ -253,10 +254,13 @@ Settings of the web UI, shared by all devices.
 | `substitutionFilter.showUnassigned` | also show entries without class (break supervision, care) while `classes` is set |
 | `substitutionFilter.hiddenTypes` | types to hide (e.g. `Pausenaufsicht`), case-insensitive; at most 30 |
 | `substitutionFilter.hiddenNotices` | notices to hide by their heading (e.g. `Allgemein`), case-insensitive; at most 30 |
+| `calendarFilter.hiddenTitles` | calendar entries to hide: titles containing one of these texts (e.g. `A-Woche`), case-insensitive; at most 30, up to 60 characters each |
 
 The `substitutionFilter` is applied by the server to
 [`/api/substitutions`](#get-apisubstitutions) and to the substitution notifications; the web
-UI's Heute page only shows entries of the own classes in the lessons.
+UI's Heute page only shows entries of the own classes in the lessons. The
+`calendarFilter` is applied by the server to [`/api/calendar`](#get-apicalendar) (the cache keeps
+all entries, so a change takes effect at once).
 
 `PUT` changes the fields that are sent – fields not sent keep their value – and answers with the
 stored version. Invalid values → `400 bad_request`.
