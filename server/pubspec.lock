@@ -285,10 +285,10 @@ packages:
     dependency: "direct main"
     description:
       name: liblanis
-      sha256: "715e0108dc3d734dbf6eba197708743339a0fbdc1e4eaf533bb5f3117a4866c2"
+      sha256: b7b31773d1a8e8bd35623a1e00bee71d059e510a6d4dee31e353906e2249bb1d
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.4"
+    version: "0.1.5"
   lints:
     dependency: "direct dev"
     description:
