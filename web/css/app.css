@@ -1034,12 +1034,16 @@ code { font-size: .88em; padding: .1rem .3rem; border-radius: 4px; background: v
   }
 }
 
-/* Einstellungen → Entwickler: server log */
+/* Einstellungen → Entwickler: server log. One color per level (--lvl): chip, badge, stripe. */
+.log-error { --lvl: var(--danger); --lvl-soft: var(--danger-soft); }
+.log-warning { --lvl: var(--warn); --lvl-soft: var(--warn-soft); }
+.log-info { --lvl: var(--accent); --lvl-soft: var(--accent-soft); }
+.log-debug { --lvl: var(--muted); --lvl-soft: var(--surface-2); }
 .log-list {
   max-height: 32rem;
   overflow: auto;
   border: 1px solid var(--border);
-  border-radius: var(--radius, .5rem);
+  border-radius: var(--radius);
   background: var(--surface);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: .78rem;
@@ -1051,14 +1055,26 @@ code { font-size: .88em; padding: .1rem .3rem; border-radius: 4px; background: v
   gap: .5rem;
   padding: .3rem .6rem;
   border-bottom: 1px solid var(--border);
+  border-left: 4px solid var(--lvl);
 }
 .log-entry:last-child { border-bottom: 0; }
-.log-entry .badge { margin: 0; }
+.log-badge { margin: 0; background: var(--lvl-soft); color: var(--lvl); }
 .log-time { color: var(--muted); white-space: nowrap; }
 .log-message { white-space: pre-wrap; overflow-wrap: anywhere; min-width: 0; }
-.log-error .log-message { color: var(--danger); }
-.log-warning .log-message { color: var(--warn); }
+.log-error .log-message, .log-warning .log-message { color: var(--lvl); }
 .log-debug .log-message { color: var(--muted); }
+.log-chip::before {
+  content: "";
+  width: .6rem;
+  height: .6rem;
+  border-radius: 50%;
+  background: var(--lvl);
+}
+.chip.pick.log-chip[aria-pressed="true"] {
+  background: var(--lvl-soft);
+  border-color: var(--lvl);
+  color: var(--lvl);
+}
 .log-list > .muted, .log-list > .error-text { padding: .6rem; }
 @media (max-width: 500px) {
   .log-entry { grid-template-columns: max-content 1fr; }

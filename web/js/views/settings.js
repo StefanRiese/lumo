@@ -82,6 +82,7 @@ export async function render(ctx) {
   // child's tab has content, the others load the child anew when clicked.
   const shown = accounts.find((a) => a.id === current) ?? accounts[0];
   const accountPart = accountGroup({ form, account: shown });
+  const developer = developerGroup(); // the log is loaded when its tab is shown
   const panelOf = (id, groups) => h('div', { class: 'tab-panel', id: `panel-${id}`, role: 'tabpanel', hidden: true }, groups);
   const panels = {
     allgemein: panelOf('allgemein', [
@@ -92,7 +93,6 @@ export async function render(ctx) {
       accessGroup({ ...base, desktop: server.desktop }),
       restartGroup({ form, server }),
       update && !update.available ? updateGroup({ ...base, status: update }) : null,
-      developerGroup(),
     ]),
     konto: panelOf('konto', [
       accountPart.el,
@@ -105,12 +105,14 @@ export async function render(ctx) {
       ctx.features.has('lessons') || ctx.features.has('timetable') ? colorsGroup(base) : null,
     ]),
     neu: panelOf('neu', [addChildGroup({ defaultSchool: shown?.schoolId })]),
+    entwickler: panelOf('entwickler', [developer.el]),
   };
 
   const tabList = [
     { key: 'allgemein', label: 'Allgemein' },
     ...accounts.map((a) => ({ key: a.id === current ? 'konto' : `konto:${a.id}`, label: a.name, account: a.id })),
     { key: 'neu', label: '+ Kind' },
+    { key: 'entwickler', label: 'Entwickler' },
   ];
   const tabButtons = new Map();
   const setUrl = (key) => {
@@ -124,6 +126,7 @@ export async function render(ctx) {
       button.setAttribute('aria-selected', String(k === key));
       button.tabIndex = k === key ? 0 : -1;
     }
+    if (key === 'entwickler') developer.load();
     if (remember) setUrl(key);
   };
   const tabs = h('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Einstellungen' },
@@ -157,7 +160,7 @@ export async function render(ctx) {
     : null;
   const param = ctx.query.get('tab');
   // Opens on Allgemein; a link to a section (#vertretungsplan) or ?tab= picks another tab.
-  show(byHash ?? (['allgemein', 'konto', 'neu'].includes(param) ? param : 'allgemein'), { remember: false });
+  show(byHash ?? (['allgemein', 'konto', 'neu', 'entwickler'].includes(param) ? param : 'allgemein'), { remember: false });
 
   // --- floating save entry: appears at the top while there is something to save or to say ---
   const message = messageArea();
@@ -173,7 +176,7 @@ export async function render(ctx) {
     h('p', { class: 'hint' }, 'Alles auf einer Seite. Gilt für alle Geräte und wird auf dem Server gespeichert.'),
     tabs,
     restartNotice,
-    panels.allgemein, panels.konto, panels.neu,
+    panels.allgemein, panels.konto, panels.neu, panels.entwickler,
     float);
 
   let saving = false;

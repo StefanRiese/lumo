@@ -555,11 +555,12 @@ export async function restartServer({ form, button, msg }) {
 
 // --- Entwickler (server log) ---------------------------------------------------------------
 
-const LOG_LEVELS = [['error', 'Fehler', 'danger'], ['warning', 'Warnung', 'warn'], ['info', 'Info', 'info'], ['debug', 'Debug', '']];
+const LOG_LEVELS = [['error', 'Fehler'], ['warning', 'Warnung'], ['info', 'Info'], ['debug', 'Debug']];
 
 /**
  * The recent log lines of the server, newest first, filtered by level and text. Nothing here is
  * saved with the page: the list only reads (GET /api/logs, the server keeps the last 1000 lines).
+ * Returns the group and `load()`, which the page calls whenever the tab is shown.
  */
 export function developerGroup() {
   const shown = new Set(['error', 'warning', 'info']); // debug = the HTTP requests: off by default
@@ -587,7 +588,7 @@ export function developerGroup() {
 
   const chips = LOG_LEVELS.map(([key, label]) => {
     const chip = h('button', {
-      type: 'button', class: 'chip pick', 'aria-pressed': String(shown.has(key)),
+      type: 'button', class: ['chip', 'pick', 'log-chip', `log-${key}`], 'aria-pressed': String(shown.has(key)),
       onclick: () => {
         if (shown.has(key)) shown.delete(key); else shown.add(key);
         chip.setAttribute('aria-pressed', String(shown.has(key)));
@@ -600,9 +601,8 @@ export function developerGroup() {
     clearTimeout(timer);
     timer = setTimeout(load, 250);
   });
-  load();
 
-  return group('entwickler', 'Entwickler',
+  const el = group('entwickler', 'Entwickler',
     'Das Protokoll des Servers (die letzten 1000 Zeilen seit dem Start). Debug zeigt die Anfragen an den Server.',
     h('div', { class: 'field' },
       h('span', { class: 'field-label' }, 'Zeigen'),
@@ -610,15 +610,16 @@ export function developerGroup() {
     h('div', { class: 'inline-fields' }, search,
       h('button', { type: 'button', class: 'button', onclick: load }, 'Aktualisieren'), info),
     list);
+  return { el, load };
 }
 
 function logEntry(e) {
-  const [, label, kind] = LOG_LEVELS.find(([key]) => key === e.level) ?? LOG_LEVELS[2];
+  const [, label] = LOG_LEVELS.find(([key]) => key === e.level) ?? LOG_LEVELS[2];
   const when = new Date(e.time);
   return h('div', { class: ['log-entry', `log-${e.level}`] },
     h('time', { datetime: e.time, class: 'log-time' }, when.toLocaleTimeString('de-DE'), ' ',
       h('span', { class: 'log-date' }, when.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }))),
-    h('span', { class: ['badge', kind && `badge-${kind}`] }, label),
+    h('span', { class: 'badge log-badge' }, label),
     h('span', { class: 'log-message' }, e.message));
 }
 
