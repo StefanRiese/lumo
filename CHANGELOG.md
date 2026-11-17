@@ -6,6 +6,10 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Fixed
+- The refresh icon in the top bar spun clockwise while its arrows point counter-clockwise; it now
+  spins the way the arrows point.
+
 ## [0.24.0] – 2026-11-17
 
 ### Added

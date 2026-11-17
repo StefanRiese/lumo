@@ -196,8 +196,9 @@ button, input { font: inherit; color: inherit; }
 }
 .icon-button:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
 .icon-button:disabled { opacity: .6; cursor: default; }
+/* The arrows of the refresh icon run counter-clockwise, so it spins that way too. */
 .spinning .icon { animation: spin 1s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin { to { transform: rotate(-360deg); } }
 
 /* ---------- layout & navigation ---------- */
 
