@@ -193,7 +193,7 @@ LXC container.
    x64/arm64, Windows, macOS archives). Guide: `deploy/README.md`. Tested without root via
    test overrides; sandboxed run checked with user systemd. Not yet run in a real LXC container
    or on GitHub Actions.
-7. **Extras** – multiple accounts (siblings; done, see below), Dateispeicher, dark mode, offline view.
+7. **Extras** – multiple accounts (siblings; done, see below), Dateispeicher, dark mode (an offline view was dropped: decided against it).
    *Done since (2026-11-09):* dark mode; desktop apps (Windows tray exe, universal macOS app);
    background sync with SQLite cache and live updates; setup and server settings in the web UI;
    substitution filter (own classes, types, notices); updates from the web UI; REST API
