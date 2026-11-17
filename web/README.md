@@ -43,8 +43,9 @@ kept in `sessionStorage` and removed from the address bar).
 shown child has its account form (name, Schulportal login, Caseda, WebUntis, „Anmeldung
 prüfen“), Vertretungen (filter) and Fächer & Farben; clicking another child's tab switches to
 that child (the page is loaded anew). *Allgemein* has the balance warning for school meals,
-Benachrichtigungen, Abgleich and Web-Oberfläche; *+ Kind* adds a child; *Entwickler* has the last
-sync per area (Letzter Abgleich), the server log, Update and Neustart. One
+Benachrichtigungen, Abgleich and Web-Oberfläche; *+ Kind* adds a child; *Entwickler* has, in this order,
+Abgleich (when each area was last synced), Benachrichtigungen (the last 7 days), Log (the server
+log), Update and Neustart. One
 form, one „Speichern“ button in a small floating entry at the top that only appears while
 something is unsaved (or a message is shown: „Gespeichert.“ fades after a moment, errors stay).
 Every control registers with `createForm()`; a save sends only what changed – the child's

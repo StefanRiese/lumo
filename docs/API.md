@@ -132,7 +132,9 @@ Query parameter for all of them: `?refresh=1` – wait for fresh data from the p
 | `GET /api/homework?alle=1` | [Homework](#homework)`[]` | `homework:all` | 2 h, new entries every 15 min |
 | `GET /api/grades` | [CourseGrades](#coursegrades)`[]` | `grades` | 2 h |
 
-The intervals are the defaults (`POLL_INTERVAL_MINUTES`, `GRADES_INTERVAL_MINUTES`); the sync only
+The intervals are the defaults, all adjustable (`POLL_INTERVAL_MINUTES`, `GRADES_INTERVAL_MINUTES`,
+`CALENDAR_INTERVAL_MINUTES`, `TIMETABLE_INTERVAL_MINUTES`, `MEALS_INTERVAL_MINUTES`, see
+[Setup and server settings](#setup-and-server-settings)); the sync only
 runs during `ACTIVE_HOURS` (default 6–22). Outside of them, an expired entry is refreshed in the
 background when it is requested.
 
@@ -524,6 +526,9 @@ login answer `503 setup_required`.
     "SYNC": true,
     "POLL_INTERVAL_MINUTES": 15,
     "GRADES_INTERVAL_MINUTES": 120,
+    "CALENDAR_INTERVAL_MINUTES": 60,
+    "TIMETABLE_INTERVAL_MINUTES": 360,
+    "MEALS_INTERVAL_MINUTES": 120,
     "ACTIVE_HOURS": "6-22",
     "NTFY_URL": "https://ntfy.sh",
     "NTFY_TOPIC": "sph-k3x…",
@@ -580,7 +585,7 @@ Content-Type: application/json
 
 | Field | |
 |---|---|
-| `settings` | config keys → values: `SYNC`, `POLL_INTERVAL_MINUTES`, `GRADES_INTERVAL_MINUTES`, `ACTIVE_HOURS`, `NTFY_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`, `NOTIFY`, `NOTIFY_GRADE_VALUES`, `APP_URL`, `HOST`, `PORT`, `SESSION_TTL_DAYS`, `COOKIE_SECURE`, `TRUST_PROXY`, `OPEN_BROWSER`, `UPDATE_CHECK`, `CASEDA_BALANCE_WARNING` |
+| `settings` | config keys → values: `SYNC`, `POLL_INTERVAL_MINUTES`, `GRADES_INTERVAL_MINUTES`, `CALENDAR_INTERVAL_MINUTES`, `TIMETABLE_INTERVAL_MINUTES`, `MEALS_INTERVAL_MINUTES`, `ACTIVE_HOURS`, `NTFY_URL`, `NTFY_TOPIC`, `NTFY_TOKEN`, `NOTIFY`, `NOTIFY_GRADE_VALUES`, `APP_URL`, `HOST`, `PORT`, `SESSION_TTL_DAYS`, `COOKIE_SECURE`, `TRUST_PROXY`, `OPEN_BROWSER`, `UPDATE_CHECK`, `CASEDA_BALANCE_WARNING` |
 | `appPassword` | new web UI password (at least 8 characters); stored as hash |
 | `currentPassword` | required with `appPassword`, except during the setup |
 

@@ -945,6 +945,53 @@ void main() {
       expect(c.databasePath, '/var/lib/x/lumo.db');
     });
 
+    test(
+      'every sync interval is adjustable, with the old values as defaults',
+      () {
+        final d = AppConfig.fromEnv(base).sync;
+        expect(
+          [for (final t in SyncTask.values) d.intervalFor(t).inMinutes],
+          [360, 360, 15, 15, 60, 120, 120, 15],
+          reason:
+              'account, timetable, substitutions, homework, calendar, '
+              'lessons, meals, untis',
+        );
+        final c = AppConfig.fromEnv({
+          ...base,
+          'POLL_INTERVAL_MINUTES': '10',
+          'GRADES_INTERVAL_MINUTES': '90',
+          'CALENDAR_INTERVAL_MINUTES': '30',
+          'TIMETABLE_INTERVAL_MINUTES': '720',
+          'MEALS_INTERVAL_MINUTES': '45',
+        }).sync;
+        expect(c.intervalFor(SyncTask.substitutions).inMinutes, 10);
+        expect(c.intervalFor(SyncTask.untis).inMinutes, 10);
+        expect(c.intervalFor(SyncTask.lessons).inMinutes, 90);
+        expect(c.intervalFor(SyncTask.calendar).inMinutes, 30);
+        expect(c.intervalFor(SyncTask.account).inMinutes, 720);
+        expect(c.intervalFor(SyncTask.timetable).inMinutes, 720);
+        expect(c.intervalFor(SyncTask.meals).inMinutes, 45);
+      },
+    );
+
+    test('too short or invalid intervals are reported by key', () {
+      expect(
+        () => AppConfig.fromEnv({
+          ...base,
+          'CALENDAR_INTERVAL_MINUTES': '5',
+          'TIMETABLE_INTERVAL_MINUTES': '30',
+          'MEALS_INTERVAL_MINUTES': 'oft',
+        }),
+        throwsA(
+          isA<ConfigException>().having((e) => e.problems, 'problems', [
+            contains('CALENDAR_INTERVAL_MINUTES'),
+            contains('TIMETABLE_INTERVAL_MINUTES'),
+            contains('MEALS_INTERVAL_MINUTES'),
+          ]),
+        ),
+      );
+    });
+
     test('errors in NOTIFY switches the failure alert on (default: on)', () {
       expect(AppConfig.fromEnv(base).poller.alertOnFailures, isTrue);
       expect(

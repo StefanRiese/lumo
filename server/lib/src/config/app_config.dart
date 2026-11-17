@@ -210,16 +210,21 @@ class AppConfig {
       }
     }
 
-    final interval = int.tryParse(get('POLL_INTERVAL_MINUTES') ?? '15');
-    if (interval == null || interval < 5) {
-      problems.add('POLL_INTERVAL_MINUTES must be at least 5');
+    /// A sync interval in minutes (`null` after a problem was recorded).
+    int? minutes(String key, int fallback, int atLeast) {
+      final v = int.tryParse(get(key) ?? '$fallback');
+      if (v == null || v < atLeast) {
+        problems.add('$key must be at least $atLeast');
+        return null;
+      }
+      return v;
     }
-    final gradesInterval = int.tryParse(
-      get('GRADES_INTERVAL_MINUTES') ?? '120',
-    );
-    if (gradesInterval == null || gradesInterval < 30) {
-      problems.add('GRADES_INTERVAL_MINUTES must be at least 30');
-    }
+
+    final interval = minutes('POLL_INTERVAL_MINUTES', 15, 5);
+    final gradesInterval = minutes('GRADES_INTERVAL_MINUTES', 120, 30);
+    final calendarInterval = minutes('CALENDAR_INTERVAL_MINUTES', 60, 15);
+    final timetableInterval = minutes('TIMETABLE_INTERVAL_MINUTES', 360, 60);
+    final mealsInterval = minutes('MEALS_INTERVAL_MINUTES', 120, 30);
 
     var from = 6, to = 22;
     final hours = get('ACTIVE_HOURS');
@@ -296,6 +301,9 @@ class AppConfig {
         }.contains(env['SYNC']?.trim().toLowerCase()),
         interval: Duration(minutes: interval!),
         detailsInterval: Duration(minutes: gradesInterval!),
+        calendarInterval: Duration(minutes: calendarInterval!),
+        slowInterval: Duration(minutes: timetableInterval!),
+        mealsInterval: Duration(minutes: mealsInterval!),
         activeFromHour: from,
         activeToHour: to,
       ),

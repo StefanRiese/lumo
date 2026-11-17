@@ -6,6 +6,14 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Changed
+- All sync intervals can be set under *Einstellungen → Abgleich*: besides substitutions/homework
+  and course pages now also the calendar (default 60 min), timetable and account (360 min) and
+  school meals (120 min). New keys `CALENDAR_INTERVAL_MINUTES`, `TIMETABLE_INTERVAL_MINUTES`,
+  `MEALS_INTERVAL_MINUTES`; the defaults are the old fixed values.
+- The *Entwickler* tab has five sections of their own, in this order: Abgleich, Benachrichtigungen,
+  Log, Update, Neustart. The log filters only reload the log.
+
 ### Fixed
 - The refresh icon in the top bar spun clockwise while its arrows point counter-clockwise; it now
   spins the way the arrows point.

@@ -31,7 +31,8 @@ let appPassword = 'demo';
 let passwordSet = !setupRequired;
 const serverValues = {
   SYNC: true, POLL_INTERVAL_MINUTES: 15,
-  GRADES_INTERVAL_MINUTES: 120, ACTIVE_HOURS: '6-22', NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: '',
+  GRADES_INTERVAL_MINUTES: 120, CALENDAR_INTERVAL_MINUTES: 60, TIMETABLE_INTERVAL_MINUTES: 360,
+  MEALS_INTERVAL_MINUTES: 120, ACTIVE_HOURS: '6-22', NTFY_URL: 'https://ntfy.sh', NTFY_TOPIC: '',
   NOTIFY: 'substitutions,homework,grades', NOTIFY_GRADE_VALUES: false, APP_URL: '', HOST: '0.0.0.0',
   PORT: 8090, SESSION_TTL_DAYS: 30, COOKIE_SECURE: false, TRUST_PROXY: false, OPEN_BROWSER: false, UPDATE_CHECK: true,
   CASEDA_BALANCE_WARNING: '10,00',
@@ -680,9 +681,13 @@ async function handleServerSettings(req, res, url) {
   }
   const b = JSON.parse((await readBody(req)) || '{}');
   const s = b.settings ?? {};
-  if (s.POLL_INTERVAL_MINUTES && Number(s.POLL_INTERVAL_MINUTES) < 5) {
+  // Minimum minutes like the real server.
+  const minimum = { POLL_INTERVAL_MINUTES: 5, GRADES_INTERVAL_MINUTES: 30, CALENDAR_INTERVAL_MINUTES: 15,
+    TIMETABLE_INTERVAL_MINUTES: 60, MEALS_INTERVAL_MINUTES: 30 };
+  const tooSmall = Object.entries(minimum).filter(([k, min]) => s[k] !== undefined && !(Number(s[k]) >= min));
+  if (tooSmall.length) {
     return json(res, 400, { error: { code: 'invalid_settings', message: 'Invalid settings',
-      problems: ['POLL_INTERVAL_MINUTES must be at least 5'] } });
+      problems: tooSmall.map(([k, min]) => `${k} must be at least ${min}`) } });
   }
   if (b.appPassword) {
     if (!setupRequired && b.currentPassword !== appPassword) {

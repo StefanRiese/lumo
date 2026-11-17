@@ -141,12 +141,12 @@ time with short pauses:
 
 | Task | Interval | Cache keys |
 |---|---|---|
-| `substitutions`, `homework` | `POLL_INTERVAL_MINUTES` (15) | `substitutions`, `homework` (merged into `homework:all`) |
-| `lessons` | `GRADES_INTERVAL_MINUTES` (120) | `courses`, `course:<id>`, `grades`, `homework:all` – one request per course |
-| `calendar` | 60 min | `calendar:<today>:<+60 days>` |
-| `meals` | 2 h (only with Caseda) | `meals` – balance and own orders of three weeks (`lib/src/caseda/`) |
+| `substitutions`, `homework` | `POLL_INTERVAL_MINUTES` (15, min. 5) | `substitutions`, `homework` (merged into `homework:all`) |
+| `lessons` | `GRADES_INTERVAL_MINUTES` (120, min. 30) | `courses`, `course:<id>`, `grades`, `homework:all` – one request per course |
+| `calendar` | `CALENDAR_INTERVAL_MINUTES` (60, min. 15) | `calendar:<today>:<+60 days>` |
+| `meals` | `MEALS_INTERVAL_MINUTES` (120, min. 30; only with Caseda) | `meals` – balance and own orders of three weeks (`lib/src/caseda/`) |
 | `untis` | like `substitutions` (only with WebUntis) | `untis` – changed lessons of the class (`lib/src/untis/`), merged into `/api/substitutions` |
-| `account`, `timetable` | 6 h | `account`, `timetable` |
+| `account`, `timetable` | `TIMETABLE_INTERVAL_MINUTES` (360, min. 60) | `account`, `timetable` |
 
 ### Status of the services (LEDs)
 

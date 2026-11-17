@@ -75,7 +75,8 @@ What happens:
 Privacy: on the public ntfy.sh server anyone who knows the topic name can read the messages.
 Keep the random name secret, or use your own ntfy server / an access token (`NTFY_TOKEN`).
 All settings: see `config.env.example` (`NOTIFY`, `SYNC`, `POLL_INTERVAL_MINUTES`,
-`GRADES_INTERVAL_MINUTES`, `ACTIVE_HOURS`, …). Change them in the web UI (*Einstellungen →
+`GRADES_INTERVAL_MINUTES`, `CALENDAR_INTERVAL_MINUTES`, `TIMETABLE_INTERVAL_MINUTES`,
+`MEALS_INTERVAL_MINUTES`, `ACTIVE_HOURS`, …). Change them in the web UI (*Einstellungen →
 Allgemein*), with `install.sh --configure`, or by editing `config.env` and restarting the service
 (values set in the web UI take precedence over `config.env`).
 

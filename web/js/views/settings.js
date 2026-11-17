@@ -102,11 +102,10 @@ export async function render(ctx) {
       ctx.features.has('lessons') || ctx.features.has('timetable') ? colorsGroup(base) : null,
     ]),
     neu: panelOf('neu', [addChildGroup({ defaultSchool: shown?.schoolId })]),
-    // Update and restart live here too: they are what one reaches for while looking at the log.
+    // Abgleich, Benachrichtigungen, Log, Update, Neustart – in this order.
     entwickler: panelOf('entwickler', [
-      update?.available ? updateGroup({ ...base, status: update }) : null,
-      developer.el,
-      update && !update.available ? updateGroup({ ...base, status: update }) : null,
+      ...developer.els,
+      update ? updateGroup({ ...base, status: update }) : null,
       restartGroup({ form, server }),
     ]),
   };

@@ -337,6 +337,9 @@ export function syncGroup({ form, v, sync }) {
   const enabled = bindCheck(form, 'SYNC', checkbox('Daten im Hintergrund aktuell halten', v.SYNC));
   const fast = bindText(form, 'POLL_INTERVAL_MINUTES', input({ type: 'number', min: '5', max: '1440', value: v.POLL_INTERVAL_MINUTES, class: 'input narrow' }));
   const slow = bindText(form, 'GRADES_INTERVAL_MINUTES', input({ type: 'number', min: '30', max: '1440', value: v.GRADES_INTERVAL_MINUTES, class: 'input narrow' }));
+  const calendar = bindText(form, 'CALENDAR_INTERVAL_MINUTES', input({ type: 'number', min: '15', max: '10080', value: v.CALENDAR_INTERVAL_MINUTES, class: 'input narrow' }));
+  const timetable = bindText(form, 'TIMETABLE_INTERVAL_MINUTES', input({ type: 'number', min: '60', max: '10080', value: v.TIMETABLE_INTERVAL_MINUTES, class: 'input narrow' }));
+  const meals = bindText(form, 'MEALS_INTERVAL_MINUTES', input({ type: 'number', min: '30', max: '10080', value: v.MEALS_INTERVAL_MINUTES, class: 'input narrow' }));
   const [fromHour, toHour] = String(v.ACTIVE_HOURS).split('-');
   const from = input({ type: 'number', min: '0', max: '23', value: fromHour, class: 'input narrow', 'aria-label': 'Von (Uhr)' });
   const to = input({ type: 'number', min: '1', max: '24', value: toHour, class: 'input narrow', 'aria-label': 'Bis (Uhr)' });
@@ -353,8 +356,11 @@ export function syncGroup({ form, v, sync }) {
   return group('abgleich', 'Abgleich',
     'Der Server lädt die Daten regelmäßig, damit die Seiten sofort angezeigt werden. Kursseiten (Noten, alle Hausaufgaben) brauchen eine Anfrage pro Kurs und werden seltener geladen.',
     enabled.el,
-    field('Vertretungen und Hausaufgaben alle … Minuten', fast),
-    field('Noten und Kursseiten alle … Minuten', slow),
+    field('Vertretungen, Hausaufgaben und WebUntis alle … Minuten', fast, 'Mindestens 5.'),
+    field('Noten und Kursseiten alle … Minuten', slow, 'Mindestens 30.'),
+    field('Kalender alle … Minuten', calendar, 'Mindestens 15.'),
+    field('Stundenplan und Konto alle … Minuten', timetable, 'Mindestens 60.'),
+    field('Schulessen alle … Minuten', meals, 'Mindestens 30. Nur mit Caseda.'),
     h('div', { class: 'field' },
       h('span', { class: 'field-label' }, 'Nur zwischen'),
       h('div', { class: 'inline-fields' }, from, h('span', null, 'und'), to, h('span', null, 'Uhr'))),
@@ -563,7 +569,8 @@ const LOG_LEVELS = [['error', 'Fehler'], ['warning', 'Warnung'], ['info', 'Info'
 /**
  * The recent log lines of the server, newest first, filtered by level and text. Nothing here is
  * saved with the page: the list only reads (GET /api/logs, the server keeps the last 1000 lines).
- * Returns the group and `load()`, which the page calls whenever the tab is shown.
+ * Returns the three groups (Abgleich, Benachrichtigungen, Log) and `load()`, which the page calls
+ * whenever the tab is shown.
  */
 export function developerGroup() {
   const shown = new Set(['error', 'warning', 'info']); // debug = the HTTP requests: off by default
@@ -575,9 +582,7 @@ export function developerGroup() {
   let timer = null;
   let token = 0;
 
-  const load = async () => {
-    loadOverview(overview);
-    loadSent(sentList);
+  const loadLog = async () => {
     const mine = ++token;
     const params = new URLSearchParams({ level: [...shown].join(','), limit: '300' });
     if (search.value.trim()) params.set('suche', search.value.trim());
@@ -592,6 +597,12 @@ export function developerGroup() {
       list.replaceChildren(h('div', { class: 'error-text' }, errorMessage(err)));
     }
   };
+  /** Everything on the tab: sync state, notifications and log. */
+  const load = () => {
+    loadOverview(overview);
+    loadSent(sentList);
+    return loadLog();
+  };
 
   const chips = LOG_LEVELS.map(([key, label]) => {
     const chip = h('button', {
@@ -599,30 +610,34 @@ export function developerGroup() {
       onclick: () => {
         if (shown.has(key)) shown.delete(key); else shown.add(key);
         chip.setAttribute('aria-pressed', String(shown.has(key)));
-        load();
+        loadLog();
       },
     }, label);
     return chip;
   });
   search.addEventListener('input', () => {
     clearTimeout(timer);
-    timer = setTimeout(load, 250);
+    timer = setTimeout(loadLog, 250);
   });
 
-  const el = group('entwickler', 'Entwickler',
-    'Wann die Daten zuletzt vom Schulportal geholt wurden und das Protokoll des Servers (die letzten 1000 Zeilen seit dem Start). Debug zeigt die Anfragen an den Server.',
-    partLabel('Letzter Abgleich', 'abgleich-uebersicht'),
-    overview,
-    partLabel('Benachrichtigungen der letzten 7 Tage', 'benachrichtigungen-liste'),
-    sentList,
-    partLabel('Protokoll', 'protokoll'),
-    h('div', { class: 'field' },
-      h('span', { class: 'field-label' }, 'Zeigen'),
-      h('div', { class: 'chips', role: 'group', 'aria-label': 'Stufen' }, chips)),
-    h('div', { class: 'inline-fields' }, search,
-      h('button', { type: 'button', class: 'button', onclick: load }, 'Aktualisieren'), info),
-    list);
-  return { el, load };
+  // The ids are prefixed: Allgemein has groups called "abgleich" and "benachrichtigungen" too.
+  const els = [
+    group('entwickler-abgleich', 'Abgleich',
+      'Wann die Daten zuletzt vom Schulportal geholt wurden, wann es zuletzt geklappt hat und was fehlgeschlagen ist.',
+      overview),
+    group('entwickler-benachrichtigungen', 'Benachrichtigungen',
+      'Was in den letzten 7 Tagen an Benachrichtigungen ausgelöst wurde. Ohne eingerichtetes ntfy steht „nicht gesendet“ dabei.',
+      sentList),
+    group('entwickler-log', 'Log',
+      'Das Protokoll des Servers (die letzten 1000 Zeilen seit dem Start). Debug zeigt die Anfragen an den Server.',
+      h('div', { class: 'field' },
+        h('span', { class: 'field-label' }, 'Zeigen'),
+        h('div', { class: 'chips', role: 'group', 'aria-label': 'Stufen' }, chips)),
+      h('div', { class: 'inline-fields' }, search,
+        h('button', { type: 'button', class: 'button', onclick: loadLog }, 'Aktualisieren'), info),
+      list),
+  ];
+  return { els, load };
 }
 
 /** When a sync run happened: "um 14:05" today, else date and time; "–" if never. */

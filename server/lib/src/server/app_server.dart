@@ -472,6 +472,9 @@ class AppServer implements ServerControl {
         'Sync with Schulportal: substitutions/homework every '
         '${sc.interval.inMinutes} min, course pages every '
         '${sc.detailsInterval.inMinutes} min, '
+        'calendar ${sc.calendarInterval.inMinutes} min, '
+        'timetable/account ${sc.slowInterval.inMinutes} min, '
+        'meals ${sc.mealsInterval.inMinutes} min, '
         '${sc.activeFromHour}–${sc.activeToHour} h',
       );
     } else {
@@ -604,6 +607,9 @@ class AppServer implements ServerControl {
       'SYNC': c.sync.enabled,
       'POLL_INTERVAL_MINUTES': c.sync.interval.inMinutes,
       'GRADES_INTERVAL_MINUTES': c.sync.detailsInterval.inMinutes,
+      'CALENDAR_INTERVAL_MINUTES': c.sync.calendarInterval.inMinutes,
+      'TIMETABLE_INTERVAL_MINUTES': c.sync.slowInterval.inMinutes,
+      'MEALS_INTERVAL_MINUTES': c.sync.mealsInterval.inMinutes,
       'ACTIVE_HOURS': '${c.sync.activeFromHour}-${c.sync.activeToHour}',
       'NTFY_URL':
           c.ntfy?.server.toString() ?? raw('NTFY_URL') ?? 'https://ntfy.sh',
