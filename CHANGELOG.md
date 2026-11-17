@@ -6,6 +6,8 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.23.1] – 2026-11-17
+
 ### Changed
 - *Einstellungen → Entwickler* is its own tab, loads the log when it is opened, and every log
   level has its own color (Fehler red, Warnung amber, Info blue, Debug gray).
