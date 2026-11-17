@@ -20,6 +20,9 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
   ran, when it last worked, what failed and when it runs next.
 
 ### Changed
+- More than 8 new substitutions, homework entries or grades at once now come in ONE notification
+  that lists all of them (grouped by day or course), instead of a summary with „Details in der
+  App“.
 - *Update* and *Neustart* moved from *Allgemein* to the *Entwickler* tab (a link to `#update` still
   opens it).
 

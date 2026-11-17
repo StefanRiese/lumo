@@ -310,7 +310,8 @@ lib/src/notify/notifier.dart        ntfy JSON publisher
 
 - first run per kind records a baseline without notifications
 - an item is marked as seen only after its notification was sent
-- more than 8 new items at once → one summary notification
+- more than 8 new items at once → ONE notification with all of them (grouped by day or
+  course; a very long text is cut at about 3.5 KB with „… und n weitere“, ntfy refuses more than 4 KB)
 - entries added from WebUntis are notified like the others
 
 ## Native build

@@ -247,15 +247,124 @@ void main() {
       expect(shown.message, 'Test (01.10.2026) → 2+');
     });
 
-    test('too many new items → one summary', () {
+    test('many new grades → ONE notification with all of them', () {
       final many = [
         course('1', [
-          for (var i = 0; i < 10; i++) Grade(name: 'T$i', date: '', mark: '1'),
+          for (var i = 0; i < 6; i++)
+            Grade(name: 'T$i', date: '0$i.10.2026', mark: '1'),
+        ]),
+        course('2', [
+          for (var i = 0; i < 4; i++) Grade(name: 'K$i', date: '', mark: '2'),
         ]),
       ];
       final d = detectGrades(many, {});
-      expect(d.pending.single.notification.title, '10 neue Noten');
+      final n = d.pending.single.notification;
+      expect(n.title, '10 neue Noten');
       expect(d.pending.single.fingerprints, hasLength(10));
+      expect(
+        n.message,
+        startsWith('Kurs 1:\nT0 (00.10.2026)\nT1 (01.10.2026)'),
+      );
+      expect(n.message, contains('T5 (05.10.2026)\n\nKurs 2:\nK0\nK1'));
+      expect(n.message, endsWith('K3'));
+      expect(n.message, isNot(contains('Details in der App')));
+      expect(n.message, isNot(contains('→')), reason: 'marks stay hidden');
+      // ...and the marks only when enabled.
+      final shown = detectGrades(many, {}, includeValues: true);
+      expect(shown.pending.single.notification.message, contains('K3 → 2'));
+    });
+
+    test('many new homework entries → ONE notification with all of them', () {
+      final items = [
+        for (var i = 0; i < 9; i++)
+          Homework(
+            courseId: 'c$i',
+            courseName: 'Fach $i',
+            entryId: 'e$i',
+            date: null,
+            topic: 'Thema $i',
+            description: '<p>Aufgabe <b>$i</b></p>',
+            done: false,
+          ),
+      ];
+      final d = detectHomework(items, {});
+      final n = d.pending.single.notification;
+      expect(n.title, '9 neue Hausaufgaben');
+      expect(d.pending.single.fingerprints, hasLength(9));
+      for (var i = 0; i < 9; i++) {
+        expect(n.message, contains('Fach $i\nThema $i:\nAufgabe $i'));
+      }
+      expect(n.clickPath, '/hausaufgaben');
+    });
+
+    test('many new substitutions → ONE notification, grouped by day', () {
+      final many = [
+        SubstitutionDay(
+          date: DateTime(2026, 11, 9),
+          entries: [for (var i = 1; i <= 5; i++) sub('$i', room: 'R$i')],
+          notices: const [],
+        ),
+        SubstitutionDay(
+          date: DateTime(2026, 11, 10),
+          entries: [for (var i = 1; i <= 4; i++) sub('$i', type: 'Entfall')],
+          notices: const [],
+        ),
+      ];
+      final d = detectSubstitutions(many, {}, now);
+      final n = d.pending.single.notification;
+      expect(n.title, '9 neue Vertretungen');
+      expect(d.pending.single.fingerprints, hasLength(9));
+      expect(n.message, startsWith('heute (Mo, 09.11.):\n1. Std. Mathe'));
+      expect(
+        n.message,
+        contains(
+          '5. Std. Mathe: Vertretung · Raum R5\n\nmorgen (Di, 10.11.):\n1. Std. Mathe: Entfall',
+        ),
+      );
+      expect(n.tags, ['x']);
+      expect(n.priority, 4);
+      expect(n.message, isNot(contains('Details in der App')));
+    });
+
+    test('up to the limit the notifications stay separate', () {
+      final eight = [
+        course('1', [
+          for (var i = 0; i < maxNotificationsPerRun; i++)
+            Grade(name: 'T$i', date: '', mark: '1'),
+        ]),
+      ];
+      expect(
+        detectGrades(eight, {}).pending.single.notification.title,
+        '8 neue Noten: Kurs 1',
+      );
+    });
+
+    test('a combined message stays below the ntfy size limit', () {
+      final items = [
+        for (var i = 0; i < 20; i++)
+          Homework(
+            courseId: 'c$i',
+            courseName: 'Fach $i',
+            entryId: 'e$i',
+            date: null,
+            topic: null,
+            description: 'ä' * 600,
+            done: false,
+          ),
+      ];
+      final d = detectHomework(items, {});
+      final n = d.pending.single.notification;
+      expect(utf8.encode(n.message).length, lessThanOrEqualTo(3500));
+      expect(n.message, startsWith('Fach 0\n'));
+      expect(
+        n.message,
+        matches(RegExp(r'… und \d+ weitere, Details in der App\.$')),
+      );
+      expect(
+        d.pending.single.fingerprints,
+        hasLength(20),
+        reason: 'all count as notified',
+      );
     });
   });
 
