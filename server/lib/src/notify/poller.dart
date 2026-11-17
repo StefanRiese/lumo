@@ -166,6 +166,11 @@ class Poller {
 
   Future<void> _onData(SyncTask task, Object? data) async {
     _alerted.remove(task); // the task works again
+    if (task == SyncTask.lessons &&
+        data is LessonsSnapshot &&
+        config.kinds.contains(WatchKind.homework)) {
+      _sentTotal += await _processAllHomework(data.allHomework);
+    }
     final kind = _kindFor(task);
     if (kind == null || !config.kinds.contains(kind)) return;
     // WebUntis task: null until the Schulportal plan is known.
@@ -178,7 +183,10 @@ class Poller {
         _now(),
         include: substitutionFilter?.call().matches,
       ),
-      WatchKind.homework => detectHomework(data as List<Homework>, seen),
+      WatchKind.homework => detectHomework(data as List<Homework>, {
+        ...seen,
+        ...db.seen(_allHomeworkStore),
+      }),
       WatchKind.grades => detectGrades(
         (data as LessonsSnapshot).grades,
         seen,
@@ -186,6 +194,79 @@ class Poller {
       ),
     };
     _sentTotal += await _process(kind, detection);
+  }
+
+  /// Seen store of the full homework list (course page sync).
+  static const _allHomeworkStore = 'homeworkall';
+
+  /// The full homework list also reaches entries the overview does not show
+  /// (older lesson entries, courses without a current entry). Own store and
+  /// baseline; what the overview already announced is not announced again.
+  Future<int> _processAllHomework(List<Homework> all) async {
+    final started = _now();
+    final statusKey = 'poll:$_allHomeworkStore';
+    final previous = PollStatus.fromJson(db.getJson(statusKey));
+    final detection = detectHomework(all, {
+      ...db.seen(WatchKind.homework.name),
+      ...db.seen(_allHomeworkStore),
+    });
+    var sent = 0;
+    String? error;
+    if (!previous.baseline) {
+      db.markSeen(_allHomeworkStore, detection.current, started);
+      log(
+        'poll homework (all): baseline recorded '
+        '(${detection.current.length} items, no notifications)',
+      );
+    } else {
+      for (final p in detection.pending) {
+        try {
+          await notifier.send(p.notification);
+          db.markSeen(_allHomeworkStore, p.fingerprints, started);
+          sent++;
+          log('notify homework: ${p.notification.title}');
+        } on NotifyException catch (e) {
+          error = 'Senden fehlgeschlagen: ${e.message}';
+          log('notify homework failed: ${e.message}');
+          break;
+        }
+      }
+      final pendingFps = {for (final p in detection.pending) ...p.fingerprints};
+      db.markSeen(
+        _allHomeworkStore,
+        detection.current.difference(pendingFps),
+        started,
+      );
+    }
+    db.pruneSeen(
+      _allHomeworkStore,
+      detection.current,
+      started.subtract(_retention),
+    );
+    db.setJson(
+      statusKey,
+      PollStatus(
+        lastRun: started,
+        lastSuccess: started,
+        lastError: error,
+        sent: previous.sent + sent,
+        baseline: true,
+      ).toJson(),
+    );
+    if (sent > 0 || error != null) {
+      final homework = status(WatchKind.homework);
+      _save(
+        WatchKind.homework,
+        PollStatus(
+          lastRun: homework.lastRun,
+          lastSuccess: homework.lastSuccess,
+          lastError: error ?? homework.lastError,
+          sent: homework.sent + sent,
+          baseline: homework.baseline,
+        ),
+      );
+    }
+    return sent;
   }
 
   static const _taskLabels = {

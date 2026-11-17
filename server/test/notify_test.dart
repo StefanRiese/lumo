@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:liblanis/liblanis.dart' as lanis;
 import 'package:lumo_server/lumo_server.dart';
 import 'package:shelf/shelf.dart';
 import 'package:test/test.dart';
@@ -417,6 +418,44 @@ void main() {
       expect(notifier.sent.single.message, contains('S. 99'));
 
       expect(await poller.runNow([WatchKind.homework]), 0, reason: 'seen');
+    });
+
+    test('homework only in the course history is notified once', () async {
+      await poller.runNow();
+      await sync.refreshNow([SyncTask.lessons]); // baseline of the full list
+      expect(notifier.sent, isEmpty);
+
+      gw.olderEntries['100'] = [
+        lanis.CurrentEntry(
+          entryID: 'old1',
+          files: [],
+          uploads: [],
+          topicTitle: 'Alt',
+          topicDate: DateTime(2026, 11, 5),
+          homework: lanis.Homework(
+            description: 'Nachtrag S. 7',
+            homeWorkDone: false,
+          ),
+        ),
+      ];
+      await sync.refreshNow([SyncTask.lessons]);
+      expect(notifier.sent, hasLength(1));
+      expect(notifier.sent.single.message, contains('Nachtrag S. 7'));
+      expect(poller.status(WatchKind.homework).sent, 1);
+
+      await sync.refreshNow([SyncTask.lessons]);
+      await sync.refreshNow([SyncTask.homework]);
+      expect(notifier.sent, hasLength(1), reason: 'announced once');
+    });
+
+    test('homework the overview announced is not announced again', () async {
+      await poller.runNow();
+      await sync.refreshNow([SyncTask.lessons]);
+      gw.lessonsData.first.currentEntry!.homework!.description = 'Neu';
+      await sync.refreshNow([SyncTask.homework]);
+      expect(notifier.sent, hasLength(1));
+      await sync.refreshNow([SyncTask.lessons]);
+      expect(notifier.sent, hasLength(1));
     });
 
     test('also notifies for data synced in the background', () async {

@@ -36,6 +36,9 @@ class FakeGateway implements SphGateway {
   lanis.SubstitutionPlan substitutionData = sampleSubstitutions();
   List<lanis.CalendarEvent> calendarData = sampleCalendar();
   lanis.Lessons lessonsData = sampleLessons();
+
+  /// Older lesson entries per course id (in the history, not the overview).
+  final olderEntries = <String, List<lanis.CurrentEntry>>{};
   DateTime? lastCalendarFrom;
   DateTime? lastCalendarTo;
 
@@ -97,7 +100,9 @@ class FakeGateway implements SphGateway {
     // Like liblanis: everything after "id=" (parent accounts: "100&p=9").
     final id = courseUrl.toString().split('id=')[1];
     final lesson = lessonsData.firstWhere((l) => l.courseID == id);
-    return _data(sampleDetails(lesson));
+    final details = sampleDetails(lesson);
+    details.history.addAll(olderEntries[id] ?? const []);
+    return _data(details);
   }
 
   /// Calls to setHomeworkDone as (courseId, entryId, done).

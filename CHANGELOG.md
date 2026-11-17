@@ -6,6 +6,12 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Fixed
+- Homework notifications also cover homework that only appears in the full homework list (older
+  lesson entries, courses without a current entry): the course page sync (every 2 h) announces it
+  once; before, only the 15-minute overview was watched. The first run after the update only
+  records the list, so no old homework is announced.
+
 ## [0.25.1] – 2026-11-17
 
 ### Added
