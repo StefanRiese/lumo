@@ -6,6 +6,8 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.21.1] – 2026-11-17
+
 ### Changed
 - Updated liblanis to 0.1.5 (fixes parsing of student lessons).
 
