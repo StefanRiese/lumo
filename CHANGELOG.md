@@ -6,6 +6,8 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.25.0] – 2026-11-17
+
 ### Changed
 - All sync intervals can be set under *Einstellungen → Abgleich*: besides substitutions/homework
   and course pages now also the calendar (default 60 min), timetable and account (360 min) and
