@@ -27,6 +27,10 @@ class PollerConfig {
   final Set<WatchKind> kinds;
   final bool includeGradeValues;
 
+  /// Notify when a sync task keeps failing ([Poller.failureAlertAfter]
+  /// times in a row), e.g. because the portal changed its pages.
+  final bool alertOnFailures;
+
   const PollerConfig({
     this.kinds = const {
       WatchKind.substitutions,
@@ -34,7 +38,15 @@ class PollerConfig {
       WatchKind.grades,
     },
     this.includeGradeValues = false,
+    this.alertOnFailures = false,
   });
+
+  /// Something is to be notified about.
+  bool get isActive => kinds.isNotEmpty || alertOnFailures;
+
+  /// The `NOTIFY` setting value: the watched kinds and `errors`.
+  String get notifyValue =>
+      [...kinds.map((k) => k.name), if (alertOnFailures) 'errors'].join(',');
 }
 
 /// Status of one watched kind (persisted in the database).
@@ -85,6 +97,10 @@ class Poller {
   final SyncService sync;
   final PortalState db;
   final Notifier notifier;
+
+  /// False while ntfy is not set up: the notifications are only recorded
+  /// (see [LoggingNotifier]), nothing is sent.
+  final bool delivers;
   final PollerConfig config;
   final void Function(String message) log;
   final DateTime Function() _now;
@@ -94,6 +110,13 @@ class Poller {
 
   int _sentTotal = 0;
 
+  /// Failing sync tasks whose alert was sent; cleared by the next success.
+  final _alerted = <SyncTask>{};
+
+  /// A sync task that failed this many times in a row is reported (the same
+  /// point at which the status LED turns red).
+  static const failureAlertAfter = 3;
+
   /// Forgotten fingerprints are pruned after this time.
   static const _retention = Duration(days: 90);
 
@@ -101,6 +124,7 @@ class Poller {
     required this.sync,
     required this.db,
     required this.notifier,
+    this.delivers = true,
     this.config = const PollerConfig(),
     this.substitutionFilter,
     void Function(String message)? log,
@@ -141,6 +165,7 @@ class Poller {
   }
 
   Future<void> _onData(SyncTask task, Object? data) async {
+    _alerted.remove(task); // the task works again
     final kind = _kindFor(task);
     if (kind == null || !config.kinds.contains(kind)) return;
     // WebUntis task: null until the Schulportal plan is known.
@@ -163,7 +188,44 @@ class Poller {
     _sentTotal += await _process(kind, detection);
   }
 
+  static const _taskLabels = {
+    SyncTask.account: 'Konto',
+    SyncTask.timetable: 'Stundenplan',
+    SyncTask.substitutions: 'Vertretungen',
+    SyncTask.homework: 'Hausaufgaben',
+    SyncTask.calendar: 'Kalender',
+    SyncTask.lessons: 'Kurse und Noten',
+    SyncTask.meals: 'Schulessen',
+    SyncTask.untis: 'WebUntis',
+  };
+
+  /// Sends one notification when [task] has failed [failureAlertAfter] times
+  /// in a row (not again for every further retry). A failed delivery is tried
+  /// again at the next failure.
+  Future<void> _alertFailure(SyncTask task, Object error) async {
+    final failures = sync.status(task).failures;
+    if (failures < failureAlertAfter || !_alerted.add(task)) return;
+    try {
+      await notifier.send(
+        AppNotification(
+          title: 'Abgleich fehlgeschlagen: ${_taskLabels[task] ?? task.name}',
+          message:
+              '${SyncService.describeError(error)} ($failures Versuche in '
+              'Folge). Details: Einstellungen → Entwickler.',
+          tags: const ['warning'],
+          priority: 4,
+          clickPath: '/einstellungen?tab=entwickler',
+        ),
+      );
+      log('notify errors: ${task.name} failed $failures times in a row');
+    } on NotifyException catch (e) {
+      _alerted.remove(task);
+      log('notify errors failed: ${e.message}');
+    }
+  }
+
   void _onFailure(SyncTask task, Object error) {
+    if (config.alertOnFailures) _alertFailure(task, error).ignore();
     final kind = _kindFor(task);
     if (kind == null || !config.kinds.contains(kind)) return;
     final previous = status(kind);

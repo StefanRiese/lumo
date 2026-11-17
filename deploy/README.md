@@ -98,13 +98,13 @@ The logins are tested before they are saved; removing a login switches the sourc
 
 | Task | Command |
 |---|---|
-| Update to the latest release | web UI: *Einstellungen → Update*, or `bash /opt/lumo/deploy/install.sh` |
+| Update to the latest release | web UI: *Einstellungen → Entwickler → Update*, or `bash /opt/lumo/deploy/install.sh` |
 | Install a specific version | `bash /opt/lumo/deploy/install.sh --version v0.1.0` |
 | Back to the previous version | `bash /opt/lumo/deploy/install.sh --rollback` |
 | Change logins / web password / ntfy / sync | web UI: *Einstellungen* (web password and ntfy also `install.sh --configure`) |
 | Status | `systemctl status lumo` |
 | Logs | `journalctl -u lumo -f` (failures with account `[id]`, cause and code location) |
-| Restart | web UI: *Einstellungen → Allgemein → Neustart*, or `systemctl restart lumo` (after editing config.env) |
+| Restart | web UI: *Einstellungen → Entwickler → Neustart*, or `systemctl restart lumo` (after editing config.env) |
 | Remove (keep config + data) | `bash /opt/lumo/deploy/install.sh --uninstall` |
 | Remove everything | `bash /opt/lumo/deploy/install.sh --uninstall --purge` |
 
@@ -118,7 +118,7 @@ in the file but are ignored afterwards. Going back to 0.18 afterwards needs a ba
 `/var/lib/lumo/lumo.db` – make one before updating (`cp /var/lib/lumo/lumo.db ~/lumo.db.bak`).
 
 **Updates from the web UI:** the server checks GitHub for new releases every 12 hours
-(`UPDATE_CHECK`) and shows a notice. „Jetzt aktualisieren“ in *Einstellungen → Update*
+(`UPDATE_CHECK`) and shows a notice. „Jetzt aktualisieren“ in *Einstellungen → Entwickler → Update*
 lets the (unprivileged) service write the wanted version to
 `/var/lib/lumo/update-request`; the root units `lumo-update.path`
 / `.service` (installed and enabled by `install.sh`) then run `install.sh --auto-update`. It

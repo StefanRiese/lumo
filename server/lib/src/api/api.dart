@@ -13,6 +13,7 @@ import '../auth/sessions.dart';
 import '../config/app_config.dart';
 import '../config/server_settings.dart';
 import '../notify/notifier.dart';
+import '../notify/notification_log.dart';
 import '../notify/poller.dart';
 import '../models/models.dart';
 import '../sph/errors.dart';
@@ -91,6 +92,7 @@ const _eventPing = Duration(seconds: 25);
 ///   GET  /api/settings      user settings (subject colors, filters)
 ///   PUT  /api/settings      change settings (fields not sent are kept)
 ///   GET  /api/notifications          notification settings + poll status
+///   GET  /api/notifications/log      notifications of the last 7 days
 ///   POST /api/notifications/test     send a test notification
 ///   POST /api/notifications/check    check for changes now
 /// Several children (accounts): every data endpoint above (account …
@@ -144,8 +146,13 @@ class Api {
   /// (tests).
   final LogBuffer? logs;
 
-  /// Notifications; null = disabled.
+  /// Notifications; null = disabled. Without ntfy it only records
+  /// ([Poller.delivers] is false).
   Poller? poller;
+
+  /// The notifications of the last week of this account; null = not kept
+  /// (tests).
+  NotificationLog? notificationLog;
 
   /// Background sync; null = data is only loaded on demand.
   SyncService? _sync;
@@ -316,6 +323,7 @@ class Api {
       ..get('/api/settings', _getSettings)
       ..put('/api/settings', _putSettings)
       ..get('/api/notifications', _notifications)
+      ..get('/api/notifications/log', _notificationLog)
       ..post('/api/notifications/test', _notificationTest)
       ..post('/api/notifications/check', _notificationCheck)
       ..get('/api/accounts', _accounts)
@@ -1249,13 +1257,16 @@ class Api {
       return _error(401, 'unauthorized', 'Login required');
     }
     final p = poller;
-    if (p == null) return _json(200, {'enabled': false});
+    if (p == null || !p.delivers) return _json(200, {'enabled': false});
     final c = p.config;
     final sc = p.sync.config;
     return _json(200, {
       'enabled': true,
       'target': p.notifier.description,
-      'kinds': [for (final k in c.kinds) k.name],
+      'kinds': [
+        for (final k in c.kinds) k.name,
+        if (c.alertOnFailures) 'errors',
+      ],
       'sync': sc.enabled,
       'intervalMinutes': sc.interval.inMinutes,
       'gradesIntervalMinutes': sc.detailsInterval.inMinutes,
@@ -1278,7 +1289,7 @@ class Api {
       return _error(401, 'unauthorized', 'Login required');
     }
     final p = poller;
-    if (p == null) {
+    if (p == null || !p.delivers) {
       return _error(409, 'notifications_disabled', 'NTFY_TOPIC is not set');
     }
     try {
@@ -1296,12 +1307,26 @@ class Api {
     }
   }
 
+  /// The notifications of the last 7 days, newest first – also those that
+  /// were only recorded because ntfy is not set up.
+  Response _notificationLog(Request request) {
+    if (!_authorized(request)) {
+      return _error(401, 'unauthorized', 'Login required');
+    }
+    return _json(200, {
+      'data': [
+        for (final e in notificationLog?.entries() ?? const []) e.toJson(),
+      ],
+      'days': NotificationLog.retention.inDays,
+    });
+  }
+
   Future<Response> _notificationCheck(Request request) async {
     if (!_authorized(request)) {
       return _error(401, 'unauthorized', 'Login required');
     }
     final p = poller;
-    if (p == null) {
+    if (p == null || !p.delivers) {
       return _error(409, 'notifications_disabled', 'NTFY_TOPIC is not set');
     }
     final sent = await p.runNow();

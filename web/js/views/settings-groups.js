@@ -4,7 +4,8 @@
 
 import { api, ApiError, errorMessage } from '../api.js';
 import { h, empty } from '../dom.js';
-import { age } from '../format.js';
+import { age, numericDate, sameDay, time } from '../format.js';
+import { accounts } from '../accounts.js';
 import {
   autoColor, autoSubjectOf, getCourseOverrides, getCourses, getSubjectColors, getSubjects,
 } from '../colors.js';
@@ -292,6 +293,7 @@ export function notifyGroup({ form, v, secrets }) {
     substitutions: checkbox('Vertretungen', kinds.has('substitutions')),
     homework: checkbox('Hausaufgaben', kinds.has('homework')),
     grades: checkbox('Noten', kinds.has('grades')),
+    errors: checkbox('Fehler beim Abgleich', kinds.has('errors')),
   };
   form.add('server', 'NOTIFY', () => Object.entries(checks).filter(([, c]) => c.box.checked).map(([k]) => k).join(','));
   const values = bindCheck(form, 'NOTIFY_GRADE_VALUES', checkbox('Note in der Benachrichtigung anzeigen', v.NOTIFY_GRADE_VALUES));
@@ -311,7 +313,8 @@ export function notifyGroup({ form, v, secrets }) {
       h('div', { class: 'inline-fields' }, topic, generate)),
     field('Zugangstoken', token, secrets.NTFY_TOKEN ? 'Leer lassen, um das gespeicherte Token zu behalten.' : 'Nur für geschützte Themen nötig.'),
     h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Benachrichtigen bei'),
-      h('div', { class: 'inline-fields' }, Object.values(checks).map((c) => c.el))),
+      h('div', { class: 'inline-fields' }, Object.values(checks).map((c) => c.el)),
+      h('span', { class: 'field-hint' }, 'Fehler beim Abgleich: eine Meldung, wenn ein Bereich dreimal hintereinander nicht geladen werden konnte, zum Beispiel weil das Schulportal seine Seiten geändert hat.')),
     values.el,
     field('Adresse der Web-Oberfläche', appUrl, 'Für Links in den Benachrichtigungen.'),
     h('p', { class: 'muted' }, h('a', { href: '/benachrichtigungen' }, 'Status und Testnachricht')));
@@ -566,11 +569,15 @@ export function developerGroup() {
   const shown = new Set(['error', 'warning', 'info']); // debug = the HTTP requests: off by default
   const list = h('div', { class: 'log-list', role: 'log', 'aria-live': 'off', tabindex: '0', 'aria-label': 'Server-Protokoll' });
   const info = h('span', { class: 'muted log-info' });
+  const overview = h('div', { class: 'sync-overview' });
+  const sentList = h('div', { class: 'sent-list' });
   const search = input({ type: 'search', placeholder: 'Im Protokoll suchen …', 'aria-label': 'Im Protokoll suchen', maxlength: '60' });
   let timer = null;
   let token = 0;
 
   const load = async () => {
+    loadOverview(overview);
+    loadSent(sentList);
     const mine = ++token;
     const params = new URLSearchParams({ level: [...shown].join(','), limit: '300' });
     if (search.value.trim()) params.set('suche', search.value.trim());
@@ -603,7 +610,12 @@ export function developerGroup() {
   });
 
   const el = group('entwickler', 'Entwickler',
-    'Das Protokoll des Servers (die letzten 1000 Zeilen seit dem Start). Debug zeigt die Anfragen an den Server.',
+    'Wann die Daten zuletzt vom Schulportal geholt wurden und das Protokoll des Servers (die letzten 1000 Zeilen seit dem Start). Debug zeigt die Anfragen an den Server.',
+    partLabel('Letzter Abgleich', 'abgleich-uebersicht'),
+    overview,
+    partLabel('Benachrichtigungen der letzten 7 Tage', 'benachrichtigungen-liste'),
+    sentList,
+    partLabel('Protokoll', 'protokoll'),
     h('div', { class: 'field' },
       h('span', { class: 'field-label' }, 'Zeigen'),
       h('div', { class: 'chips', role: 'group', 'aria-label': 'Stufen' }, chips)),
@@ -611,6 +623,70 @@ export function developerGroup() {
       h('button', { type: 'button', class: 'button', onclick: load }, 'Aktualisieren'), info),
     list);
   return { el, load };
+}
+
+/** When a sync run happened: "um 14:05" today, else date and time; "–" if never. */
+function when(iso) {
+  if (!iso) return '–';
+  const d = new Date(iso);
+  return sameDay(d, new Date()) ? `um ${time(d)}` : `${numericDate(d)} ${time(d)}`;
+}
+
+/** Fills [box] with the state of the background sync of every child: per area when it ran, when it worked, what failed. */
+async function loadOverview(box) {
+  const results = await Promise.all(accounts.map(async (a) => [a, await api(`/api/accounts/${a.id}/sync`).catch(() => null)]));
+  box.replaceChildren(...results.map(([account, sync]) => h('div', { class: 'sync-account' },
+    accounts.length > 1 ? h('strong', null, account.name) : null,
+    syncTable(sync))));
+}
+
+/**
+ * The notifications of the last 7 days of all children, newest first – also those that were only
+ * recorded because ntfy is not set up ("nicht gesendet").
+ */
+async function loadSent(box) {
+  const results = await Promise.all(accounts.map(async (a) => {
+    const r = await api(`/api/accounts/${a.id}/notifications/log`).catch(() => null);
+    return r ? r.data.map((e) => ({ ...e, account: a.name })) : null;
+  }));
+  if (results.every((r) => r === null)) {
+    box.replaceChildren(h('p', { class: 'muted' }, 'Die Benachrichtigungen konnten nicht geladen werden.'));
+    return;
+  }
+  const entries = results.flat().filter(Boolean).sort((a, b) => b.time.localeCompare(a.time));
+  if (entries.length === 0) {
+    box.replaceChildren(h('p', { class: 'muted' }, 'In den letzten 7 Tagen wurde keine Benachrichtigung ausgelöst.'));
+    return;
+  }
+  box.replaceChildren(h('ul', { class: 'sent-items' }, entries.map((e) => h('li', { class: 'sent-item' },
+    h('time', { datetime: e.time, class: 'log-time' }, when(e.time)),
+    h('div', { class: 'sent-text' },
+      h('strong', null, accounts.length > 1 ? `${e.account}: ${e.title}` : e.title),
+      e.message ? h('div', { class: 'muted' }, e.message) : null),
+    e.delivered
+      ? h('span', { class: 'badge badge-ok' }, 'gesendet')
+      : h('span', { class: 'badge badge-warn', title: 'ntfy ist nicht eingerichtet: die Benachrichtigung wurde nur hier aufgeführt.' }, 'nicht gesendet')))));
+}
+
+function syncTable(sync) {
+  if (!sync) return h('p', { class: 'muted' }, 'Der Stand des Abgleichs konnte nicht geladen werden.');
+  if (!sync.enabled) return h('p', { class: 'muted' }, 'Der Abgleich im Hintergrund ist ausgeschaltet: die Daten werden beim Öffnen der Seiten geholt.');
+  const rows = Object.entries(TASKS).filter(([key]) => key in (sync.tasks ?? {})).map(([key, label]) => {
+    const t = sync.tasks[key] ?? {};
+    const failing = t.failures > 0;
+    return h('tr', { class: failing && 'sync-failing' },
+      h('th', { scope: 'row' }, label),
+      h('td', null, when(t.lastRun)),
+      h('td', null, when(t.lastSuccess)),
+      h('td', null, failing
+        ? h('span', { class: 'error-text' }, `${t.lastError ?? 'Fehler'} (${t.failures}× in Folge)`)
+        : t.lastRun ? h('span', { class: 'badge badge-ok' }, 'OK') : h('span', { class: 'muted' }, 'noch nicht')),
+      h('td', null, when(t.nextRun)));
+  });
+  return h('div', { class: 'sync-scroll' },
+    h('table', { class: 'sync-table' },
+      h('thead', null, h('tr', null, ['Bereich', 'Letzter Lauf', 'Zuletzt erfolgreich', 'Status', 'Nächster Lauf'].map((c) => h('th', { scope: 'col' }, c)))),
+      h('tbody', null, rows)));
 }
 
 function logEntry(e) {

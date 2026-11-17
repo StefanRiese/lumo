@@ -236,14 +236,20 @@ class AppConfig {
     }
 
     final kinds = <WatchKind>{};
+    var alertOnFailures = false;
     for (final part
-        in (get('NOTIFY') ?? 'substitutions,homework,grades')
+        in (get('NOTIFY') ?? 'substitutions,homework,grades,errors')
             .split(',')
             .where((p) => p.trim().isNotEmpty)) {
+      if (part.trim().toLowerCase() == 'errors') {
+        alertOnFailures = true;
+        continue;
+      }
       final k = WatchKind.parse(part);
       if (k == null) {
         problems.add(
-          'NOTIFY: unknown "$part" (allowed: substitutions, homework, grades)',
+          'NOTIFY: unknown "$part" '
+          '(allowed: substitutions, homework, grades, errors)',
         );
       } else {
         kinds.add(k);
@@ -279,6 +285,7 @@ class AppConfig {
       poller: PollerConfig(
         kinds: kinds,
         includeGradeValues: _bool(env['NOTIFY_GRADE_VALUES']),
+        alertOnFailures: alertOnFailures,
       ),
       sync: SyncConfig(
         enabled: !const {

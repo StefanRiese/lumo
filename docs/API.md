@@ -429,18 +429,20 @@ data: {"running":false}
 
 ## Notifications
 
-Push notifications via [ntfy](https://ntfy.sh) about new substitutions, homework and grades.
-They are configured in the [account](#accounts-children).
+Push notifications via [ntfy](https://ntfy.sh) about new substitutions, homework and grades, and
+about a sync that keeps failing (`NOTIFY=…,errors`). They are configured in the
+[account](#accounts-children).
 
 ### `GET /api/notifications`
 
-Without ntfy: `200 {"enabled": false}`. Otherwise:
+Without ntfy: `200 {"enabled": false}` (changes are still recorded, see
+[the log](#get-apinotificationslog)). Otherwise:
 
 ```json
 {
   "enabled": true,
   "target": "ntfy.sh, Thema sph-x7…",
-  "kinds": ["substitutions", "homework", "grades"],
+  "kinds": ["substitutions", "homework", "grades", "errors"],
   "sync": true,
   "intervalMinutes": 15,
   "gradesIntervalMinutes": 120,
@@ -456,6 +458,35 @@ Without ntfy: `200 {"enabled": false}`. Otherwise:
 notifications). `sent` counts the notifications sent so far. Substitution notifications only
 cover entries that match the permanent `substitutionFilter`.
 
+`errors` is not a watched kind (it has no entry in `status`): when a sync task (account,
+timetable, substitutions, homework, calendar, lessons, meals, untis) failed three times in a row –
+the point where the status LED turns red – one notification „Abgleich fehlgeschlagen: …“ is sent
+with the short error and a link to *Einstellungen → Entwickler*. Not again for further retries; a
+success re-arms it, and a failed delivery is tried again at the next failure. On by default
+(`NOTIFY` unset); a `NOTIFY` that is set without `errors` switches it off.
+
+
+### `GET /api/notifications/log`
+
+The notifications of the last 7 days of the account, newest first (the web UI shows them in
+*Einstellungen → Entwickler*). Needs a login. At most 200 are kept; they survive a restart.
+
+```json
+{
+  "days": 7,
+  "data": [
+    {"time": "2026-11-17T08:40:00.000Z", "title": "Neue Vertretung",
+     "message": "Mathe 3. Std.: …", "delivered": true}
+  ]
+}
+```
+
+`delivered: false` means ntfy is not set up: the notification was triggered and only recorded
+here, nothing was sent (the first run per kind only records the current state, so a new setup
+does not list old items). With ntfy set up, only notifications that ntfy accepted are listed, not
+failed attempts (they are retried). The list also covers test messages and „Abgleich
+fehlgeschlagen“. Switching all notifications off (`NOTIFY` empty) stops new entries; the list
+stays readable.
 
 ### `POST /api/notifications/test`
 
@@ -496,7 +527,7 @@ login answer `503 setup_required`.
     "ACTIVE_HOURS": "6-22",
     "NTFY_URL": "https://ntfy.sh",
     "NTFY_TOPIC": "sph-k3x…",
-    "NOTIFY": "substitutions,homework,grades",
+    "NOTIFY": "substitutions,homework,grades,errors",
     "NOTIFY_GRADE_VALUES": false,
     "APP_URL": "",
     "HOST": "0.0.0.0",

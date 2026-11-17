@@ -6,6 +6,21 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Added
+- Notification „Abgleich fehlgeschlagen“ when a part of the data (Stundenplan, Vertretungen, …)
+  could not be loaded three times in a row, e.g. because the portal changed its pages. New
+  entry „Fehler beim Abgleich“ under *Einstellungen → Benachrichtigen bei* (`NOTIFY=…,errors`);
+  on by default where `NOTIFY` is not set, otherwise switch it on there.
+- *Einstellungen → Entwickler*: list of the notifications of the last 7 days, newest first, with
+  time and text. Also without ntfy: then the notifications are only recorded and marked „nicht
+  gesendet“. New endpoint `GET /api/notifications/log`.
+- *Einstellungen → Entwickler* starts with „Letzter Abgleich“: per child and area when it last
+  ran, when it last worked, what failed and when it runs next.
+
+### Changed
+- *Update* and *Neustart* moved from *Allgemein* to the *Entwickler* tab (a link to `#update` still
+  opens it).
+
 ## [0.23.1] – 2026-11-17
 
 ### Changed

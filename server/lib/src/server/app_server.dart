@@ -20,6 +20,7 @@ import '../desktop/build_info.g.dart';
 import '../health/health.dart';
 import '../notify/notifier.dart';
 import '../net/ports.dart';
+import '../notify/notification_log.dart';
 import '../notify/poller.dart';
 import '../sph/liblanis_gateway.dart';
 import '../sph/sph_gateway.dart';
@@ -406,28 +407,37 @@ class AppServer implements ServerControl {
     log: info,
   );
 
+  /// Watches the synced data and notifies. Without ntfy the notifications
+  /// are only recorded in [log] (*Einstellungen → Entwickler*).
   static Poller? _createPoller(
     SyncService sync,
     PortalState state,
     SettingsStore settings,
     AppConfig config,
+    NotificationLog log,
     void Function(String) info,
     ({String name, String id})? Function() label,
   ) {
+    if (!config.poller.isActive) return null;
     final ntfy = config.ntfy;
-    if (ntfy == null || config.poller.kinds.isEmpty) return null;
     return Poller(
       sync: sync,
       db: state,
-      notifier: LabeledNotifier(
-        NtfyNotifier(
-          server: ntfy.server,
-          topic: ntfy.topic,
-          token: ntfy.token,
-          appUrl: config.appUrl,
-        ),
-        label,
-      ),
+      delivers: ntfy != null,
+      notifier: ntfy == null
+          ? LoggingNotifier(null, log)
+          : LabeledNotifier(
+              LoggingNotifier(
+                NtfyNotifier(
+                  server: ntfy.server,
+                  topic: ntfy.topic,
+                  token: ntfy.token,
+                  appUrl: config.appUrl,
+                ),
+                log,
+              ),
+              label,
+            ),
       config: config.poller,
       substitutionFilter: () => settings.load().substitutionFilter,
       log: info,
@@ -467,14 +477,19 @@ class AppServer implements ServerControl {
     } else {
       _info('Background sync disabled (SYNC=false): data is loaded on demand');
     }
-    if (c.ntfy != null && c.poller.kinds.isNotEmpty) {
+    if (c.ntfy != null && c.poller.isActive) {
       _info(
         'Notifications via ${c.ntfy!.server.host}: '
-        '${c.poller.kinds.map((k) => k.name).join(', ')}'
+        '${c.poller.notifyValue.replaceAll(',', ', ')}'
         '${sc.enabled ? '' : ' (only on manual refresh, SYNC=false)'}',
       );
+    } else if (c.poller.isActive) {
+      _info(
+        'ntfy is not set up (NTFY_TOPIC): notifications are only listed in '
+        'Einstellungen → Entwickler, not sent',
+      );
     } else {
-      _info('Notifications disabled (NTFY_TOPIC not set)');
+      _info('Notifications disabled (NOTIFY is empty)');
     }
   }
 
@@ -549,7 +564,7 @@ class AppServer implements ServerControl {
       ],
       'services': [
         ?healthOfNtfy(
-          configured: ntfy != null && _config.poller.kinds.isNotEmpty,
+          configured: ntfy != null && _config.poller.isActive,
           reachable: reachable,
           statuses: [
             for (final p in pollers)
@@ -593,7 +608,7 @@ class AppServer implements ServerControl {
       'NTFY_URL':
           c.ntfy?.server.toString() ?? raw('NTFY_URL') ?? 'https://ntfy.sh',
       'NTFY_TOPIC': c.ntfy?.topic ?? '',
-      'NOTIFY': c.poller.kinds.map((k) => k.name).join(','),
+      'NOTIFY': c.poller.notifyValue,
       'NOTIFY_GRADE_VALUES': c.poller.includeGradeValues,
       'APP_URL': c.appUrl?.toString() ?? '',
       'HOST': c.host,
@@ -754,14 +769,17 @@ class AppServer implements ServerControl {
       _mealsGateway,
       _untisGateway,
     );
+    final notifications = NotificationLog(state);
     account.api
       ..service = account.service
       ..sync = account.sync
+      ..notificationLog = notifications
       ..poller = _createPoller(
         account.sync,
         state,
         account.api.settings,
         _config,
+        notifications,
         _logFor(c.id),
         () => _label(c.id),
       )

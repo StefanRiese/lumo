@@ -20,6 +20,7 @@ export 'src/config/server_settings.dart';
 export 'src/health/health.dart';
 export 'src/models/models.dart';
 export 'src/notify/change_detector.dart';
+export 'src/notify/notification_log.dart';
 export 'src/notify/notifier.dart';
 export 'src/notify/poller.dart';
 export 'src/server/app_server.dart';

@@ -9,6 +9,7 @@ const KIND_LABELS = {
   substitutions: 'Vertretungen',
   homework: 'Hausaufgaben',
   grades: 'Noten',
+  errors: 'Fehler beim Abgleich',
 };
 
 export async function render() {

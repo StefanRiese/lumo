@@ -531,6 +531,16 @@ async function handleApi(req, res, url) {
     simulateSync();
     return json(res, 202, { refreshing: true });
   }
+  if (path === '/api/notifications/log') {
+    // Invented list; with MOCK_NO_NTFY=1 like a server without ntfy ("nicht gesendet").
+    const delivered = process.env.MOCK_NO_NTFY !== '1';
+    const ago = (min) => new Date(Date.now() - min * 60e3).toISOString();
+    return json(res, 200, { days: 7, data: [
+      { time: ago(40), title: 'Neue Vertretung', message: 'Mathe 3. Std.: Vertretung bei Frau Beispiel', delivered },
+      { time: ago(60 * 26), title: 'Neue Hausaufgabe', message: 'Englisch: Vokabeln S. 45', delivered },
+      { time: ago(60 * 24 * 3), title: 'Abgleich fehlgeschlagen: Kalender', message: 'Schulportal nicht erreichbar (3 Versuche in Folge). Details: Einstellungen → Entwickler.', delivered },
+    ] });
+  }
   if (path === '/api/logs') {
     const levels = (url.searchParams.get('level') ?? '').split(',').filter(Boolean);
     const q = (url.searchParams.get('suche') ?? '').toLowerCase();

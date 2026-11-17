@@ -54,7 +54,7 @@ Starting the app a second time opens the web UI instead of a second server.
   They only arrive while the computer and the app are running – for notifications around the
   clock use the LXC installation.
 - **Updates** – the app checks GitHub for new versions and shows a notice in the web UI.
-  *Einstellungen → Update → „Jetzt aktualisieren“* downloads the new version, checks
+  *Einstellungen → Entwickler → Update → „Jetzt aktualisieren“* downloads the new version, checks
   its SHA-256 and restarts the app (Windows: the exe replaces itself; macOS: the menu bar app
   swaps the app bundle – if that is not allowed, e.g. without write access to *Programme*, it
   opens the download page instead).

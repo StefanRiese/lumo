@@ -96,6 +96,7 @@ node dev/mock-server.mjs                            # UI dev without portal, :80
 MOCK_SETUP=1 node dev/mock-server.mjs               # setup page: /einrichtung?token=demo-token
 MOCK_UPDATE=1 node dev/mock-server.mjs              # app update available
 MOCK_ABBREV=1 node dev/mock-server.mjs              # subject abbreviations like the real portal
+MOCK_NO_NTFY=1 node dev/mock-server.mjs             # Entwickler tab: notifications "nicht gesendet" (no ntfy)
 MOCK_CHILDREN=1 node dev/mock-server.mjs            # a second account ("Mia") for the account switcher (MOCK_SETUP=1: no account yet)
 curl -X POST localhost:8090/dev/bump-version         # mock "server update" (installed-app reload)
 for f in web/js/*.js web/js/views/*.js dev/*.mjs; do node --check "$f"; done
@@ -155,7 +156,7 @@ Never commit a generated `build_info.g.dart` (only the placeholder).
   main` and wait for it to pass: GitHub Actions builds Linux x64/arm64, the Windows exe and
   the universal macOS app; the release notes come from that CHANGELOG section
   (`deploy/release-notes.sh`, the release fails if the section is missing).
-- Deployment target: LXC container; update with *Einstellungen → Update* in the web
+- Deployment target: LXC container; update with *Einstellungen → Entwickler → Update* in the web
   UI or `bash /opt/lumo/deploy/install.sh`.
 - Before introducing a new product name, check the App Store, Google Play and the DPMA trademark
   register for existing apps around Schulportal Hessen (not only GitHub).

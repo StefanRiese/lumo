@@ -354,6 +354,93 @@ void main() {
     });
   });
 
+  group('failure alerts', () {
+    late FakeGateway gw;
+    late SphService service;
+    late AppDatabase db;
+    late RecordingNotifier notifier;
+    late SyncService sync;
+
+    Poller create({required bool alert}) => Poller(
+      sync: sync,
+      db: db,
+      notifier: notifier,
+      config: PollerConfig(kinds: const {}, alertOnFailures: alert),
+      now: () => now,
+    );
+
+    /// Lets the homework sync fail [times] times (the portal is down).
+    Future<void> fail(int times) async {
+      await service.logout();
+      gw.loginErrors.addAll(
+        List.filled(times, const SphUnavailableException('down')),
+      );
+      for (var i = 0; i < times; i++) {
+        await sync.refreshNow([SyncTask.homework]);
+      }
+      await Future<void>.delayed(Duration.zero); // the alert is sent unawaited
+    }
+
+    setUp(() {
+      gw = FakeGateway();
+      service = SphService(gw, now: () => now);
+      db = AppDatabase.inMemory();
+      notifier = RecordingNotifier();
+      sync = SyncService(
+        service: service,
+        cache: Api.createCache(now: () => now),
+        db: db,
+        config: const SyncConfig(pause: Duration.zero),
+        now: () => now,
+      );
+    });
+
+    tearDown(() async {
+      await sync.stop();
+      await service.dispose();
+      db.close();
+    });
+
+    test(
+      'one alert after three failures in a row, again after a recovery',
+      () async {
+        create(alert: true);
+        await fail(2);
+        expect(notifier.sent, isEmpty);
+
+        await fail(1); // the third failure in a row
+        final n = notifier.sent.single;
+        expect(n.title, 'Abgleich fehlgeschlagen: Hausaufgaben');
+        expect(n.message, contains('Schulportal nicht erreichbar'));
+        expect(n.message, contains('3 Versuche'));
+        expect(n.priority, 4);
+        expect(n.clickPath, '/einstellungen?tab=entwickler');
+
+        await fail(2); // more failures of the same streak: no second alert
+        expect(notifier.sent, hasLength(1));
+
+        await sync.refreshNow([SyncTask.homework]); // works again
+        await fail(3); // a new streak
+        expect(notifier.sent, hasLength(2));
+      },
+    );
+
+    test('a failed delivery is tried again at the next failure', () async {
+      create(alert: true);
+      notifier.failNext = 1;
+      await fail(3);
+      expect(notifier.sent, isEmpty);
+      await fail(1);
+      expect(notifier.sent, hasLength(1));
+    });
+
+    test('no alerts unless switched on', () async {
+      create(alert: false);
+      await fail(4);
+      expect(notifier.sent, isEmpty);
+    });
+  });
+
   group('SyncService', () {
     late FakeGateway gw;
     late SphService service;
@@ -747,6 +834,29 @@ void main() {
       expect((c.sync.activeFromHour, c.sync.activeToHour), (7, 21));
       expect(c.poller.includeGradeValues, isTrue);
       expect(c.databasePath, '/var/lib/x/lumo.db');
+    });
+
+    test('errors in NOTIFY switches the failure alert on (default: on)', () {
+      expect(AppConfig.fromEnv(base).poller.alertOnFailures, isTrue);
+      expect(
+        AppConfig.fromEnv({
+          ...base,
+          'NOTIFY': 'homework',
+        }).poller.alertOnFailures,
+        isFalse,
+      );
+      final only = AppConfig.fromEnv({...base, 'NOTIFY': 'errors'}).poller;
+      expect(only.alertOnFailures, isTrue);
+      expect(only.kinds, isEmpty);
+      expect(only.isActive, isTrue);
+      expect(only.notifyValue, 'errors');
+      expect(
+        AppConfig.fromEnv({
+          ...base,
+          'NOTIFY': 'grades, errors',
+        }).poller.notifyValue,
+        'grades,errors',
+      );
     });
 
     test('rejects invalid values', () {

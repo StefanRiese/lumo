@@ -86,13 +86,10 @@ export async function render(ctx) {
   const panelOf = (id, groups) => h('div', { class: 'tab-panel', id: `panel-${id}`, role: 'tabpanel', hidden: true }, groups);
   const panels = {
     allgemein: panelOf('allgemein', [
-      update?.available ? updateGroup({ ...base, status: update }) : null,
       mealsGroup(base),
       notifyGroup(base),
       syncGroup({ ...base, sync }),
       accessGroup({ ...base, desktop: server.desktop }),
-      restartGroup({ form, server }),
-      update && !update.available ? updateGroup({ ...base, status: update }) : null,
     ]),
     konto: panelOf('konto', [
       accountPart.el,
@@ -105,7 +102,13 @@ export async function render(ctx) {
       ctx.features.has('lessons') || ctx.features.has('timetable') ? colorsGroup(base) : null,
     ]),
     neu: panelOf('neu', [addChildGroup({ defaultSchool: shown?.schoolId })]),
-    entwickler: panelOf('entwickler', [developer.el]),
+    // Update and restart live here too: they are what one reaches for while looking at the log.
+    entwickler: panelOf('entwickler', [
+      update?.available ? updateGroup({ ...base, status: update }) : null,
+      developer.el,
+      update && !update.available ? updateGroup({ ...base, status: update }) : null,
+      restartGroup({ form, server }),
+    ]),
   };
 
   const tabList = [
