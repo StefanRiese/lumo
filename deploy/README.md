@@ -31,7 +31,9 @@ The script
 2. creates the system user `lumo`,
 3. installs the program to `/opt/lumo`,
 4. installs `avahi-daemon`, so the container is reachable by name: `http://<hostname>.local:8080`,
-   e.g. `http://lumo.local:8080` for a container named `lumo` (`SKIP_AVAHI=1` skips it),
+   e.g. `http://lumo.local:8080` for a container named `lumo`, and announces the server as the
+   service `_lumo._tcp` so the Home Assistant integration finds it by itself (`SKIP_AVAHI=1`
+   skips both),
 5. installs and starts the systemd service `lumo` and checks that it answers,
 6. prints the **setup link** `http://<container-ip>:8080/einrichtung?token=…`.
 

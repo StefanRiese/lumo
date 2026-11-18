@@ -130,6 +130,10 @@ config file applies again.
 **Name in the network:** the server itself does not announce a name. On Linux `install.sh`
 installs `avahi-daemon`, which announces the machine as `<hostname>.local` (the Proxmox container
 `lumo`: `http://lumo.local:8080`). Windows and macOS announce their computer name the same way.
+`install.sh` also announces the service `_lumo._tcp` (TXT `app=lumo`, the `PORT` from
+`config.env`) so that clients like the Home Assistant integration discover the server; after
+changing `PORT`, run `install.sh` again to update the announcement. The desktop apps do not
+announce the service.
 
 A plain `APP_PASSWORD` in the config file is replaced by `APP_PASSWORD_HASH` on start (if the
 file is writable).
