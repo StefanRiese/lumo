@@ -1016,7 +1016,9 @@ with s.get(f"{base}/api/events", stream=True) as events:
 
 ### Home Assistant
 
-A REST sensor with the number of substitution entries. The integration cannot log in itself:
+Use the [Lumo integration](https://github.com/StefanRiese/ha-lumo): it logs in with the web UI password,
+re-logs in when the session has expired and follows [`GET /api/events`](#get-apievents) instead
+of polling. For a quick look without it, a REST sensor works as well. It cannot log in itself:
 log in once with curl (see above) and store the cookie value as secret. Sessions are extended
 with every use, so the cookie stays valid as long as the sensor queries at least once within
 `SESSION_TTL_DAYS`:

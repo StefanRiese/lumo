@@ -11,6 +11,9 @@ with Server-Sent Events, ntfy notifications, setup and settings in the web UI; o
 school meals from Caseda Schulmenü and WebUntis as a second source for substitutions) plus a
 plain HTML/JS web UI. Deployed as a native binary + systemd service in a Proxmox LXC container, and
 as desktop apps (Windows tray exe, macOS menu bar app). License GPL-3.0 (required by liblanis).
+The Home Assistant integration lives in its own repository, `StefanRiese/ha-lumo` (local checkout
+`~/github/ha-lumo`); it uses the REST API and event stream, so check it when `docs/API.md`
+changes incompatibly.
 Plan and decisions: `docs/PLAN.md`; API reference: `docs/API.md` (keep it in sync with
 `lib/src/api/api.dart`); configuration: `server/README.md`.
 
