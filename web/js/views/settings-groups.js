@@ -691,12 +691,12 @@ function syncTable(sync) {
     const failing = t.failures > 0;
     return h('tr', { class: failing && 'sync-failing' },
       h('th', { scope: 'row' }, label),
-      h('td', null, when(t.lastRun)),
-      h('td', null, when(t.lastSuccess)),
-      h('td', null, failing
+      h('td', { 'data-label': 'Letzter Lauf' }, when(t.lastRun)),
+      h('td', { 'data-label': 'Zuletzt erfolgreich' }, when(t.lastSuccess)),
+      h('td', { 'data-label': 'Status' }, failing
         ? h('span', { class: 'error-text' }, `${t.lastError ?? 'Fehler'} (${t.failures}× in Folge)`)
         : t.lastRun ? h('span', { class: 'badge badge-ok' }, 'OK') : h('span', { class: 'muted' }, 'noch nicht')),
-      h('td', null, when(t.nextRun)));
+      h('td', { 'data-label': 'Nächster Lauf' }, when(t.nextRun)));
   });
   return h('div', { class: 'sync-scroll' },
     h('table', { class: 'sync-table' },
