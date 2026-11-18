@@ -23,6 +23,7 @@ CONFIG_DIR=${CONFIG_DIR:-/etc/$APP}
 CONFIG_FILE="$CONFIG_DIR/config.env"
 UNIT_DIR=${UNIT_DIR:-/etc/systemd/system}
 UNIT_FILE="$UNIT_DIR/$APP.service"
+AVAHI_SERVICE_FILE=${AVAHI_SERVICE_FILE:-/etc/avahi/services/$APP.service}
 UPDATE_UNITS=("$APP-update.path" "$APP-update.service")
 DROPIN_DIR="$UNIT_DIR/$APP.service.d"
 STATE_DIR=${STATE_DIR:-/var/lib/$APP}
@@ -342,6 +343,30 @@ ensure_avahi() {
     warn "avahi-daemon läuft nicht – erreichbar nur über die IP-Adresse"
 }
 
+# Announces the server as a service (_lumo._tcp, mDNS) so clients such as the Home Assistant
+# integration find it without typing an address. The port is the one in config.env at the
+# time of install/update: run `install.sh` again after changing PORT.
+announce_service() {
+  [[ $SKIP_SYSTEMD == 1 || ${SKIP_AVAHI:-0} == 1 ]] && return 0
+  [[ -d $(dirname "$AVAHI_SERVICE_FILE") ]] || return 0
+  local port
+  port=$(config_get PORT)
+  [[ $port =~ ^[0-9]{1,5}$ ]] || port=8080
+  cat > "$AVAHI_SERVICE_FILE" <<EOF
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<!-- Written by install.sh -->
+<service-group>
+  <name replace-wildcards="yes">Lumo (%h)</name>
+  <service>
+    <type>_lumo._tcp</type>
+    <port>$port</port>
+    <txt-record>app=lumo</txt-record>
+  </service>
+</service-group>
+EOF
+}
+
 # Unprivileged LXC without "nesting" cannot set up the sandbox namespaces.
 relax_sandbox() {
   mkdir -p "$DROPIN_DIR"
@@ -467,6 +492,7 @@ do_install() {
   ensure_config
   configure 0
   ensure_avahi
+  announce_service
   start_service
   summary
 }
@@ -538,6 +564,7 @@ do_uninstall() {
   say "Entferne $APP"
   systemd disable --now "$APP" "${UPDATE_UNITS[0]}" >/dev/null 2>&1 || true
   rm -f "$UNIT_FILE" "${UPDATE_UNITS[@]/#/$UNIT_DIR/}"
+  rm -f "$AVAHI_SERVICE_FILE"
   rm -rf "$DROPIN_DIR" "$PREFIX" "$PREFIX.old" "$PREFIX.new"
   systemd daemon-reload || true
   if [[ $purge == 1 ]]; then
