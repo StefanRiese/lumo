@@ -38,14 +38,18 @@ def _gradient(size, top, bottom):
     return img
 
 
+GLYPH = 1.3   # size of the four cells relative to the icon (the indigo border gets thinner)
+
+
 def _glyph(d, s, r, bright, dim, accent, check):
     """Draws on a 1024 grid; s() maps coordinates, r() scales lengths.
     Four cells (timetable); the last one is the accent with a check mark."""
-    cell, radius = 276, 72
+    g = lambda v: 512 + (v - 512) * GLYPH  # scale about the centre
+    cell, radius = 276 * GLYPH, 72 * GLYPH
     for x, y, color in [(215, 215, bright), (532, 215, dim), (215, 532, dim), (532, 532, accent)]:
-        d.rounded_rectangle([s(x), s(y), s(x + cell), s(y + cell)], r(radius), fill=color)
-    pts = [(599, 671), (650, 722), (742, 614)]
-    w = 46
+        d.rounded_rectangle([s(g(x)), s(g(y)), s(g(x) + cell), s(g(y) + cell)], r(radius), fill=color)
+    pts = [(g(599), g(671)), (g(650), g(722)), (g(742), g(614))]
+    w = 46 * GLYPH
     for a, b in zip(pts, pts[1:]):
         d.line([(s(a[0]), s(a[1])), (s(b[0]), s(b[1]))], fill=check, width=r(w))
     for x, y in pts:
@@ -74,10 +78,12 @@ def template_icon(size):
     img = Image.new('RGBA', (big, big), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     black = (0, 0, 0, 255)
-    # Fill the frame: the glyph spans ~215..808.
-    s = lambda v: int(((v - 190) * 1024 / 645) * SS)
+    # Fill the frame: the glyph spans 215..808 before scaling, with a small margin.
+    frame = 593 * GLYPH + 52
+    lo = 512 - frame / 2
+    s = lambda v: int(((v - lo) * 1024 / frame) * SS)
     dim = (0, 0, 0, 120)
-    _glyph(d, s, lambda v: int(v * 1024 / 645 * SS), black, dim, black, (0, 0, 0, 0))
+    _glyph(d, s, lambda v: int(v * 1024 / frame * SS), black, dim, black, (0, 0, 0, 0))
     return img.resize((size, size), Image.LANCZOS)
 
 
@@ -88,7 +94,7 @@ def web_png(size):
     big = 1024 * SS
     img = _gradient(big, BLUE_TOP, BLUE_BOTTOM)
     d = ImageDraw.Draw(img)
-    z = 0.85
+    z = 0.81  # keeps the glyph inside the maskable safe zone (circle of 80 %)
     sg = lambda v: int((512 + (v - 512) * z) * SS)
     _glyph(d, sg, lambda v: int(v * z * SS), WHITE, DIM, GOLD, CHECK)
     return img.convert('RGB').resize((size, size), Image.LANCZOS)
