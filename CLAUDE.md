@@ -11,6 +11,9 @@ with Server-Sent Events, ntfy notifications, setup and settings in the web UI; o
 school meals from Caseda Schulmenü and WebUntis as a second source for substitutions) plus a
 plain HTML/JS web UI. Deployed as a native binary + systemd service in a Proxmox LXC container, and
 as desktop apps (Windows tray exe, macOS menu bar app). License GPL-3.0 (required by liblanis).
+The Home Assistant integration lives in its own repository, `StefanRiese/ha-lumo` (local checkout
+`~/github/ha-lumo`); it uses the REST API and event stream, so check it when `docs/API.md`
+changes incompatibly.
 Plan and decisions: `docs/PLAN.md`; API reference: `docs/API.md` (keep it in sync with
 `lib/src/api/api.dart`); configuration: `server/README.md`.
 
@@ -66,12 +69,6 @@ web/                    web UI: index.html, css/app.css, js/ (ES modules, no bui
   js/colors.js          subject colors + course ↔ timetable-abbreviation matching
   js/status.js          status LEDs in the top bar (connection + health of the services)
   js/update.js          update hint/install, watchServerVersion (reloads the installed app)
-custom_components/lumo/ Home Assistant integration at the repository root (HACS needs it there):
-                        api.py (client + SSE), coordinator.py, changes.py (lumo_new_item), timetable.py,
-                        config_flow.py, one module per platform, translations/ (en, de)
-hacs.json               HACS metadata (custom repository)
-homeassistant/          README.md of the integration; tests/ (pytest against tests/fake_server.py,
-                        invented data, no real server), pyproject.toml, requirements_test.txt
 dev/mock-server.mjs     Node mock API with invented data (password "demo"; MOCK_SETUP=1: setup page)
 deploy/                 systemd units (incl. -update.path/.service), install.sh, build-release.sh, guide
   build-macos-app.sh    universal macOS app from the arm64 + x64 builds (lipo)
@@ -93,14 +90,6 @@ WEB_DIR=../web dart run bin/server.dart             # without server/.env: setup
 dart run bin/sph.dart timetable                     # JSON from the real portal
 dart run bin/caseda.dart --summary                  # Caseda: counts only (credentials in server/.env)
 dart run bin/untis.dart --summary                   # WebUntis vs. Schulportal: counts only
-```
-
-Home Assistant integration (run in `homeassistant/`, Python 3.13; the system Python is older: use `uv venv --python 3.13`):
-
-```sh
-pip install -r requirements_test.txt                # pytest-homeassistant-custom-component, ruff
-ruff check . ../custom_components && ruff format --check . ../custom_components   # CI (job `homeassistant`)
-pytest -q
 ```
 
 Web UI / scripts (repo root):
@@ -152,11 +141,6 @@ Never commit a generated `build_info.g.dart` (only the placeholder).
   gateway or the mock server; run real servers in tests with `SYNC=false`.
 - **ntfy:** do not send to the public ntfy.sh server without the user's consent; test with a
   local fake ntfy server.
-- **Home Assistant integration:** it only reads the server's cache (never `?refresh=1`). Grades
-  and marking homework as done are opt-in options, off by default – keep them that way. Large
-  lists in entity attributes go into `_unrecorded_attributes`. Keep `docs/API.md` and
-  `homeassistant/README.md` in sync when entities or options change; tests use the fake server,
-  never a real one.
 - **Tests:** add/adjust unit tests for server changes; UI changes are checked against the mock
   server in headless Firefox (Marionette).
 - **Processes:** stop servers by PID (e.g. from `ss -ltnp`), not with `pkill -f <pattern>` —
@@ -170,9 +154,7 @@ Never commit a generated `build_info.g.dart` (only the placeholder).
   only touch Markdown files do not run CI (`paths-ignore: ['**.md']`).
 - After a change to the web UI that installed apps must pick up: they reload themselves after
   a server update (`watchServerVersion`), but only from the release that introduced it on.
-- Releases: move *Unreleased* to a new version section, set the version of the Home Assistant
-  integration (`bash deploy/ha-version.sh set vX.Y.Z`; HACS installs at the tag, the release
-  workflow fails if `manifest.json` differs), commit and push, then tag `vX.Y.Z`
+- Releases: move *Unreleased* to a new version section, commit and push, then tag `vX.Y.Z`
   and push the tag (only on request). Before tagging, run `gh workflow run release.yml --ref
   main` and wait for it to pass: GitHub Actions builds Linux x64/arm64, the Windows exe and
   the universal macOS app; the release notes come from that CHANGELOG section

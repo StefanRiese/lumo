@@ -1,7 +1,4 @@
 ## Open
-- [ ] Home Assistant integration (`homeassistant/`): try it against the real server with a real Home Assistant (so far only tests with the fake server and a client smoke test against `dev/mock-server.mjs`)
-- [ ] Home Assistant: try the HACS custom repository installation (`hacs.json` at the root)
-- [ ] Home Assistant: „Substitutions changed“ binary sensor (needs a reset rule; the `lumo_new_item` event exists), meal sensors for the next orders, calendar filter for exams (`kategorie`)
 - [ ] macOS menu bar app: exit code 81 („restart“ from the web UI) starts the server again (cannot be tested on Linux; the release workflow only builds it)
 - [ ] Windows app: the restart button of the web UI restarts like the tray item „Neu starten“
 - [ ] parent accounts: several children in one parent account – only the first pupil is shown (the page has one block per pupil); show all of them, e.g. as one Lumo account per pupil

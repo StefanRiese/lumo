@@ -29,22 +29,6 @@ jobs:
       - run: dart analyze --fatal-infos
       - run: dart test
 
-  homeassistant:
-    name: Home Assistant integration (lint + test)
-    runs-on: ubuntu-22.04
-    defaults:
-      run:
-        working-directory: homeassistant
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.13'
-      - run: pip install -r requirements_test.txt
-      - run: ruff check . ../custom_components
-      - run: ruff format --check . ../custom_components
-      - run: pytest -q
-
   web:
     name: Web UI + scripts (lint)
     runs-on: ubuntu-22.04
@@ -64,4 +48,4 @@ jobs:
       - name: Manifest is valid JSON
         run: node -e 'JSON.parse(require("fs").readFileSync("web/manifest.webmanifest","utf8"))'
       - name: ShellCheck
-        run: shellcheck -s bash deploy/install.sh deploy/build-release.sh deploy/build-macos-app.sh deploy/release-notes.sh deploy/ha-version.sh
+        run: shellcheck -s bash deploy/install.sh deploy/build-release.sh deploy/build-macos-app.sh deploy/release-notes.sh
