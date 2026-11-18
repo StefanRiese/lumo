@@ -6,6 +6,10 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Fixed
+- iPhone in landscape: the top bar, side menu and bottom bar no longer sit behind the Dynamic
+  Island / notch (the safe areas on the left and right are respected).
+
 ## [0.25.3] – 2026-11-18
 
 ### Fixed

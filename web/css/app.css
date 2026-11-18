@@ -164,6 +164,9 @@ button, input { font: inherit; color: inherit; }
   gap: 1rem;
   padding: 0 1rem;
   padding-top: env(safe-area-inset-top);
+  /* Landscape iPhone: keep clear of the Dynamic Island / notch on either side */
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
@@ -208,12 +211,12 @@ button, input { font: inherit; color: inherit; }
   position: sticky;
   top: var(--topbar-height);
   align-self: flex-start;
-  width: var(--nav-width);
+  width: calc(var(--nav-width) + env(safe-area-inset-left));
   flex: none;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 1rem .75rem;
+  padding: 1rem .75rem 1rem calc(.75rem + env(safe-area-inset-left));
 }
 
 .nav-link {
@@ -234,6 +237,7 @@ main {
   min-width: 0;
   max-width: 1200px;
   padding: 1.5rem 1.5rem 3rem;
+  padding-right: max(1.5rem, env(safe-area-inset-right));
 }
 main:focus { outline: none; }
 
@@ -248,7 +252,7 @@ main:focus { outline: none; }
     flex-direction: row;
     justify-content: space-around;
     gap: 0;
-    padding: 0 0 env(safe-area-inset-bottom);
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     background: var(--surface);
     border-top: 1px solid var(--border);
     /* Own compositing layer: on phones the bar otherwise lags behind or
@@ -271,7 +275,7 @@ main:focus { outline: none; }
   .nav-link .label-long { display: none; }
   .nav-link .label-short { display: block; }
   .nav-link.active { background: transparent; }
-  main { padding: 1rem 1rem calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 1.5rem); }
+  main { padding: 1rem max(1rem, env(safe-area-inset-right)) calc(var(--tabbar-height) + env(safe-area-inset-bottom) + 1.5rem) max(1rem, env(safe-area-inset-left)); }
   .brand span, .status { font-size: .8rem; }
 }
 
@@ -874,7 +878,7 @@ code { font-size: .88em; padding: .1rem .3rem; border-radius: 4px; background: v
   right: 0;
   margin-inline: auto;
   width: fit-content;
-  max-width: calc(100vw - 2rem);
+  max-width: calc(100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
   z-index: 8;
   display: grid;
   gap: .5rem;
@@ -1029,8 +1033,8 @@ code { font-size: .88em; padding: .1rem .3rem; border-radius: 4px; background: v
   .status-popover {
     position: fixed;
     top: calc(var(--topbar-height) + .4rem);
-    left: .75rem;
-    right: .75rem;
+    left: max(.75rem, env(safe-area-inset-left));
+    right: max(.75rem, env(safe-area-inset-right));
     width: auto;
     max-height: calc(100vh - var(--topbar-height) - var(--tabbar-height) - env(safe-area-inset-bottom) - 1.5rem);
   }
