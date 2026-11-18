@@ -6,6 +6,8 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.25.6] – 2026-11-18
+
 ### Changed
 - App icon: the four squares are larger, the indigo border around them thinner (web icon, home
   screen icon, Windows / macOS app and menu bar icons).
