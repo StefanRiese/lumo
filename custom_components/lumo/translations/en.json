@@ -1,0 +1,143 @@
+{
+  "config": {
+    "flow_title": "Lumo ({host})",
+    "step": {
+      "user": {
+        "title": "Connect to Lumo",
+        "description": "Address of your Lumo server and the password of its web UI (not the Schulportal password).",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "ssl": "Use HTTPS",
+          "password": "Password"
+        },
+        "data_description": {
+          "host": "Name or IP address, e.g. lumo.local"
+        }
+      },
+      "accounts": {
+        "title": "Choose children",
+        "description": "Which children of this server should appear in Home Assistant?",
+        "data": {
+          "accounts": "Children"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Password changed",
+        "description": "The Lumo server at {host} rejected the stored password. Enter the current web UI password.",
+        "data": {
+          "password": "Password"
+        }
+      },
+      "reconfigure": {
+        "title": "Change server",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "ssl": "Use HTTPS",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "The server is not reachable. Check host, port and HTTPS.",
+      "invalid_auth": "Wrong password.",
+      "rate_limited": "Too many failed logins. Wait a few minutes and try again.",
+      "setup_required": "The Lumo server is not set up yet. Finish the setup in its web UI first.",
+      "not_lumo": "This is not a Lumo server (or its version is not supported).",
+      "no_accounts": "The server has no child set up yet. Add one in the Lumo web UI first."
+    },
+    "abort": {
+      "already_configured": "This server is already set up.",
+      "reauth_successful": "The password was updated.",
+      "reconfigure_successful": "The server was updated.",
+      "wrong_server": "This is a different server than the configured one. Add it as a new entry instead."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lumo options",
+        "data": {
+          "accounts": "Children",
+          "enable_grades": "Load grades",
+          "allow_homework_write": "Allow marking homework as done"
+        },
+        "data_description": {
+          "accounts": "Children that appear in Home Assistant.",
+          "enable_grades": "Off by default. Grades are personal data: only switch this on if you want them in Home Assistant (history, recorder).",
+          "allow_homework_write": "Off by default. Marking homework as done writes to the real Schulportal."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "substitutions_today": {
+        "name": "Substitutions today"
+      },
+      "substitutions_tomorrow": {
+        "name": "Substitutions tomorrow"
+      },
+      "open_homework": {
+        "name": "Open homework"
+      },
+      "next_lesson": {
+        "name": "Next lesson"
+      },
+      "first_lesson_tomorrow": {
+        "name": "First lesson tomorrow"
+      },
+      "meal_balance": {
+        "name": "Meal balance"
+      },
+      "meal_today": {
+        "name": "Meal today"
+      },
+      "grades_count": {
+        "name": "Grades"
+      }
+    },
+    "binary_sensor": {
+      "cancelled_today": {
+        "name": "Cancellation today"
+      },
+      "cancelled_tomorrow": {
+        "name": "Cancellation tomorrow"
+      },
+      "schulportal_connection": {
+        "name": "Schulportal connection"
+      },
+      "caseda_connection": {
+        "name": "Caseda connection"
+      },
+      "untis_connection": {
+        "name": "WebUntis connection"
+      },
+      "ntfy_connection": {
+        "name": "Notifications (ntfy)"
+      },
+      "updates_connection": {
+        "name": "Update server"
+      },
+      "update_available": {
+        "name": "Update available"
+      }
+    },
+    "calendar": {
+      "calendar": {
+        "name": "School calendar"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh now"
+      }
+    },
+    "todo": {
+      "homework": {
+        "name": "Homework"
+      }
+    }
+  }
+}

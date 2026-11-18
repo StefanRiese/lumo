@@ -6,6 +6,15 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Added
+- Home Assistant integration (`custom_components/lumo`, installable with HACS as a custom
+  repository or by copying the folder; see `homeassistant/README.md`): one device per child with sensors
+  for substitutions, cancellations, open homework and the next lessons, a school calendar, a
+  homework to-do list, school meals (with Caseda), connection diagnostics and an update hint.
+  Changes arrive live over the event stream; the event `lumo_new_item` fires for new
+  substitutions, homework and grades. Grades and marking homework as done are off by default
+  and switched on in the integration's options.
+
 ## [0.25.6] – 2026-11-18
 
 ### Changed
