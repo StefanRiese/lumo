@@ -6,6 +6,8 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.26.0] – 2026-11-18
+
 ### Added
 - `install.sh` announces the server as the mDNS service `_lumo._tcp`, so the Home Assistant
   integration (`ha-lumo` from 0.3.0) discovers it automatically.
