@@ -6,6 +6,8 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.25.3] – 2026-11-18
+
 ### Fixed
 - *Einstellungen → Entwickler → Abgleich* no longer overflows the screen on phones: every area is
   shown as a small card instead of a wide table.
