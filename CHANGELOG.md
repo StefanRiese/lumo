@@ -6,6 +6,8 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.25.5] – 2026-11-18
+
 ### Fixed
 - Side menu (wide screens, e.g. iPhone in landscape) scrolls on its own, apart from the page, when
   it is taller than the screen.
