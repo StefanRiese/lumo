@@ -136,7 +136,9 @@ The intervals are the defaults, all adjustable (`POLL_INTERVAL_MINUTES`, `GRADES
 `CALENDAR_INTERVAL_MINUTES`, `TIMETABLE_INTERVAL_MINUTES`, `MEALS_INTERVAL_MINUTES`, see
 [Setup and server settings](#setup-and-server-settings)); the sync only
 runs during `ACTIVE_HOURS` (default 6–22). Outside of them, an expired entry is refreshed in the
-background when it is requested.
+background when it is requested. Then the entry counts as fresh for a shorter time (cache TTL):
+account, courses, grades 1 h; timetable 6 h; calendar 1 h; substitutions 10 min; homework
+15 min; course details 30 min; `homework?alle=1` 45 min; meals 2 h.
 
 Endpoints of portal areas that are not enabled for the account answer
 `404 feature_disabled`. Which areas are enabled: `features` in `/api/account`.
@@ -369,7 +371,9 @@ Status of the background sync.
     "substitutions": { … },
     "homework":      { … },
     "calendar":      { … },
-    "lessons":       { … }
+    "lessons":       { … },
+    "meals":         { … },
+    "untis":         { … }
   }
 }
 ```
@@ -382,6 +386,8 @@ Status of the background sync.
 | `homework` | homework overview | `homework` (merged into `homework:all`) |
 | `calendar` | calendar, today … +60 days | `calendar:<today>:<+60 days>` |
 | `lessons` | all course pages (one portal request per course) | `courses`, `course:<id>`, `grades`, `homework:all` |
+| `meals` | Caseda balance and orders (only if set up) | `meals` |
+| `untis` | WebUntis changes (only if set up) | `untis` |
 
 `lastError` is a short German description („Schulportal nicht erreichbar“, „Anmeldung beim
 Schulportal fehlgeschlagen“, …). After a failure the task is retried after 5, 10, 20 …
@@ -541,7 +547,8 @@ login answer `503 setup_required`.
     "COOKIE_SECURE": false,
     "TRUST_PROXY": false,
     "OPEN_BROWSER": false,
-    "UPDATE_CHECK": true
+    "UPDATE_CHECK": true,
+    "CASEDA_BALANCE_WARNING": "10,00"
   },
   "secrets": {"NTFY_TOKEN": false, "APP_PASSWORD": true},
   "sources": {"NTFY_TOPIC": "web", "PORT": "config", "SYNC": "default", …},
