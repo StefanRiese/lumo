@@ -65,48 +65,4 @@ void main() {
       expect(gw.homeworkCalls, isEmpty, reason: 'nothing sent to the portal');
     });
   });
-
-  group('applets of an account', () {
-    const student = {'stundenplan.php', 'vertretungsplan.php'};
-
-    test('a parent account gets the timetable when the portal menu has it', () {
-      final applets = appletsOfAccount(
-        supported: {'kalender.php', 'meinunterricht.php'},
-        menuLinks: ['kalender.php', 'stundenplan.php', null],
-        accountType: 'parent',
-      );
-      expect(applets, {
-        'kalender.php',
-        'meinunterricht.php',
-        'stundenplan.php',
-      });
-    });
-
-    test('not when the menu lacks it, and not for other account types', () {
-      expect(
-        appletsOfAccount(
-          supported: {'kalender.php'},
-          menuLinks: ['kalender.php'],
-          accountType: 'parent',
-        ),
-        {'kalender.php'},
-      );
-      expect(
-        appletsOfAccount(
-          supported: {'kalender.php'},
-          menuLinks: ['stundenplan.php'],
-          accountType: 'teacher',
-        ),
-        {'kalender.php'},
-      );
-      expect(
-        appletsOfAccount(
-          supported: student,
-          menuLinks: ['stundenplan.php'],
-          accountType: 'student',
-        ),
-        student,
-      );
-    });
-  });
 }

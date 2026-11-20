@@ -8,7 +8,7 @@
 - [ ] WebUntis: after the Schulportal adds an entry that WebUntis had supplied, one extra notification is possible
 
 ## Done
-- [x] liblanis 0.2.1: issues #4 and #6 fixed upstream, `portal_fixes.dart` removed (check a real parent account before the next release; `appletsOfAccount` can go if the timetable works without it)
+- [x] liblanis 0.2.1: issues #4 and #6 fixed upstream, `portal_fixes.dart` removed and `appletsOfAccount` removed (check a real parent account before the next release)
 - [x] decision: no offline mode (service worker) – will not be built
 - [x] real server checked with 0.19.5 (2026-11-11): the update function took over the account, update from the web UI and the restart button work, two accounts and the parent account (Stundenplan, courses, open and done homework, Noten) work
 - [x] report the swallowed parse errors and the parent homework status to liblanis: https://github.com/lanis-mobile/liblanis/issues/5, https://github.com/lanis-mobile/liblanis/issues/6

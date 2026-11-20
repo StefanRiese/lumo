@@ -8,7 +8,7 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ### Changed
 - liblanis 0.2.1 (was 0.1.5): parent accounts' timetable, courses and homework status are now
-  read by liblanis itself; Lumo's own workaround for the course pages is removed.
+  read by liblanis itself; Lumo's own workarounds (course pages, timetable applet) are removed.
 
 ## [0.26.0] – 2026-11-18
 

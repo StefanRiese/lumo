@@ -51,14 +51,11 @@ lib/
 `SphService.lessonsSnapshot()` loads every course page once and returns course details,
 grades and the full homework list together (used by the sync).
 
-**Parent accounts** differ from students in three places, all handled in `lib/src/sph/`: liblanis
-only counts the timetable for students (`appletsOfAccount` adds `stundenplan.php` when the portal
-menu has it); the course overview has one block per pupil with the pupil in the ids
-(`mappen123456`; `fixCourseOverview` gives the first pupil's blocks the ids liblanis expects); and
-course links carry the pupil (`id=5&p=9`; `courseKey` turns it into `5-p-9` for paths, cache keys
-and settings). Homework cannot be marked as done (`SphFeatureDisabledException`), and its status is read from the
-label on each homework (`done label-default` „erledigt“ / `done label-warning` „offen“) instead of
-the pupil's checkbox, which `fixCourseOverview` turns into the `.undone` marker liblanis reads.
+**Parent accounts** differ from students in two places in `lib/src/sph/`: course links carry the
+pupil (`id=5&p=9`; `courseKey` turns it into `5-p-9` for paths, cache keys and settings), and
+homework cannot be marked as done (`SphFeatureDisabledException`). liblanis (0.2.x) reads the
+timetable, the course overview (one block per pupil) and the homework status of parent accounts
+itself.
 
 Session policy of `SphService`:
 
