@@ -44,7 +44,7 @@ published on pub.dev, actively maintained).
 Compared alternatives: `SPHclient` (TypeScript, MIT) covers only login, Vertretungsplan and
 Kalender; `liblanis-for-python` (MIT) has login/encryption but no module parsers yet.
 
-**Risks:** liblanis is pre-1.0 (`0.1.x`), so its API may change → pin the version and wrap it
+**Risks:** liblanis is pre-1.0 (`0.x`), so its API may change → pin the version and wrap it
 behind our own service layer so a change only touches one place. If a parser breaks, fix it
 upstream with a PR instead of forking.
 

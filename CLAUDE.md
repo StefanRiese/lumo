@@ -34,9 +34,7 @@ server/                 Dart package (own pubspec)
   bin/caseda.dart       CLI: Caseda balance and orders (`--summary`: counts only)
   bin/untis.dart        CLI: WebUntis changes and timetable compared with the Schulportal (`--summary`)
   bin/spike.dart        milestone-1 probe
-  lib/src/sph/          SphGateway (liblanis seam), SphService (session policy), mappers, errors;
-                        portal_fixes.dart: workaround for parent accounts' course pages (liblanis issues #4, #6,
-                        remove once fixed upstream)
+  lib/src/sph/          SphGateway (liblanis seam), SphService (session policy), mappers, errors
   lib/src/api/          shelf API (api.dart), ResponseCache (stale-while-revalidate, persisted),
                         ServerControl (setup page / server settings), query_filters.dart
                         (URL filters of the list endpoints)

@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:liblanis/easy_client.dart' as lanis;
 
-import 'portal_fixes.dart';
 import 'sph_gateway.dart';
 
 /// Applets Lumo offers for an account. liblanis only counts the timetable
@@ -53,11 +52,6 @@ class LiblanisGateway implements SphGateway {
     await _client.login();
     final session = _client.session;
     if (!keepAlive) session?.preventLogoutTimer?.cancel();
-    final interceptors = session?.dio.interceptors;
-    if (interceptors != null &&
-        !interceptors.any((i) => i is PortalFixInterceptor)) {
-      interceptors.add(PortalFixInterceptor());
-    }
   }
 
   @override

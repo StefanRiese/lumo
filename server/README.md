@@ -37,7 +37,6 @@ lib/
   src/sph/mappers.dart         liblanis → app models
   src/sph/sph_service.dart     session policy, retries, error mapping
   src/sph/errors.dart          SphAuth/Unavailable/FeatureDisabled/NotFound/DataException
-  src/sph/portal_fixes.dart    workaround for parent accounts' course pages (liblanis issues #4, #6)
   src/caseda/caseda.dart       Caseda Schulmenü: client, parser, MealsGateway (read-only)
   src/untis/untis.dart         WebUntis: client (REST), mapper, UntisGateway (read-only)
   src/untis/merge.dart         combines the WebUntis changes with the Schulportal plan
