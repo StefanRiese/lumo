@@ -3,6 +3,14 @@ import 'package:liblanis/easy_client.dart' as lanis;
 
 import 'sph_gateway.dart';
 
+/// The courses of the first pupil of a parent account's overview.
+lanis.Lessons firstPupilLessons(lanis.ParentLessonsOverview overview) {
+  if (overview.lessonsByPupil.isEmpty) {
+    throw StateError('The parent overview has no pupil');
+  }
+  return overview.lessonsByPupil.values.first;
+}
+
 /// [SphGateway] backed by liblanis' [lanis.EasyLanisClient].
 class LiblanisGateway implements SphGateway {
   @override
@@ -60,14 +68,25 @@ class LiblanisGateway implements SphGateway {
   Future<List<lanis.CalendarEvent>> calendar(DateTime from, DateTime to) =>
       _client.parsers.calendar.getCalendar(startDate: from, endDate: to);
 
+  bool get _isParent => accountType == 'parent';
+
+  /// Parent accounts have one block per pupil on „Mein Unterricht“ and need
+  /// liblanis' parent parser; only the first pupil is shown (several children
+  /// in one parent account: see TODO.md).
   @override
-  Future<lanis.Lessons> lessons() => _client.parsers.lessonsStudent.getHome();
+  Future<lanis.Lessons> lessons() async {
+    if (!_isParent) return _client.parsers.lessonsStudent.getHome();
+    return firstPupilLessons(await _client.parsers.lessonsParent.getHome());
+  }
 
   @override
-  Future<lanis.DetailedLesson> lessonDetails(Uri courseUrl) => _client
-      .parsers
-      .lessonsStudent
-      .getDetailedCourseView(courseUrl.toString());
+  Future<lanis.DetailedLesson> lessonDetails(Uri courseUrl) => _isParent
+      ? _client.parsers.lessonsParent.getDetailedCourseView(
+          courseUrl.toString(),
+        )
+      : _client.parsers.lessonsStudent.getDetailedCourseView(
+          courseUrl.toString(),
+        );
 
   /// Same request as liblanis' `LessonsStudentParser.setHomework`, but with a
   /// plain-text response: liblanis passes dio's parsed body through as String,

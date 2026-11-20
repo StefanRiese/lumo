@@ -6,6 +6,13 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.26.2] – 2026-11-20
+
+### Fixed
+- Parent accounts: courses, homework and grades failed with „Das Schulportal hat unerwartete Daten
+  geliefert“ since 0.26.1 (only the Stundenplan worked). The course pages are now read with
+  liblanis' parent parser.
+
 ## [0.26.1] – 2026-11-20
 
 ### Changed
