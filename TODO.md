@@ -1,13 +1,13 @@
 ## Open
-- [ ] check parent account (courses, open homework, Stundenplan) against the real portal with liblanis 0.2.1
 - [ ] macOS menu bar app: exit code 81 („restart“ from the web UI) starts the server again (cannot be tested on Linux; the release workflow only builds it)
 - [ ] Windows app: the restart button of the web UI restarts like the tray item „Neu starten“
-- [ ] parent accounts: several children in one parent account – only the first pupil is shown (the page has one block per pupil); show all of them, e.g. as one Lumo account per pupil
 - [ ] test the tray menu (Windows) and the menu bar item (macOS) „Einstellungen“: they now open `/einstellungen` directly
 - [ ] WebUntis: lessons without a period of the time grid have no period and are not merged into the lessons on Heute (check how often this happens)
 - [ ] WebUntis: after the Schulportal adds an entry that WebUntis had supplied, one extra notification is possible
 
 ## Done
+- [x] parent account checked against the real portal with liblanis 0.2.1 (courses, homework, grades, Stundenplan; fixes in 0.26.2 and 0.26.3)
+- [x] decision (2026-11-20): one Lumo account per child with its own student login; several pupils in one parent login are not supported (only the first pupil is shown, the parent timetable still uses the student parser)
 - [x] liblanis 0.2.1: issues #4 and #6 fixed upstream, `portal_fixes.dart` removed and `appletsOfAccount` removed (check a real parent account before the next release)
 - [x] decision: no offline mode (service worker) – will not be built
 - [x] real server checked with 0.19.5 (2026-11-11): the update function took over the account, update from the web UI and the restart button work, two accounts and the parent account (Stundenplan, courses, open and done homework, Noten) work
