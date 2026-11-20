@@ -57,6 +57,49 @@ void main() {
       }
     });
 
+    test(
+      'older homework counts as done: the portal has no status for it',
+      () async {
+        // Like the real portal for parents: the history has no marker (liblanis
+        // reads it as not done); only the entry of the overview has one.
+        lanis.CurrentEntry entry(String id, {required bool done}) =>
+            lanis.CurrentEntry(
+              entryID: id,
+              files: [],
+              uploads: [],
+              topicDate: DateTime(2026, 11, id == 'new' ? 16 : 9),
+              homework: lanis.Homework(
+                description: 'Aufgabe $id',
+                homeWorkDone: done,
+              ),
+            );
+        final current = entry('new', done: false);
+        gw.lessonsData = [
+          lanis.Lesson(
+            courseID: '100&p=9',
+            name: 'Mathe',
+            courseURL: Uri.parse(
+              'https://start.schulportal.hessen.de/meinunterricht.php?a=sus_view&id=100&p=9',
+            ),
+            teachers: [],
+            currentEntry: current,
+          ),
+        ];
+        gw.olderEntries['100&p=9'] = [entry('old', done: false)];
+        final all = {
+          for (final h in (await svc.lessonsSnapshot()).allHomework)
+            h.entryId: h.done,
+        };
+        expect(all, {'new': false, 'old': true});
+
+        final history = (await svc.courseDetails('100-p-9')).history;
+        expect(
+          {for (final e in history) e.id: e.homeworkDone},
+          {'new': false, 'old': true},
+        );
+      },
+    );
+
     test('homework cannot be marked as done', () async {
       await expectLater(
         svc.setHomeworkDone('100-p-9', 'e1', true),

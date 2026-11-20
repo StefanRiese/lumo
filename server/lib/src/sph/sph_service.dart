@@ -105,7 +105,7 @@ class SphService {
         final grades = <CourseGrades>[];
         final byEntry = <String, Homework>{};
         for (final l in lessons) {
-          final page = await _gateway.lessonDetails(l.courseURL);
+          final page = await _loadDetails(l);
           final course = mapCourse(l);
           courses.add(course);
           details[course.id] = mapCourseDetails(page);
@@ -130,7 +130,7 @@ class SphService {
   Future<CourseDetails> courseDetails(String courseId) =>
       _run(SphFeature.lessons, () async {
         final lesson = await _findLesson(courseId);
-        return mapCourseDetails(await _gateway.lessonDetails(lesson.courseURL));
+        return mapCourseDetails(await _loadDetails(lesson));
       });
 
   static final _idPattern = RegExp(r'^[A-Za-z0-9_-]{1,64}$');
@@ -194,6 +194,21 @@ class SphService {
   DateTime _today() {
     final n = _now();
     return DateTime(n.year, n.month, n.day);
+  }
+
+  /// The course page of [lesson]. A parent account's history carries no
+  /// done/open marker for homework (only the latest entry of each course on
+  /// the overview has one), so liblanis reports every older entry as not done:
+  /// those count as done, the entry of the overview keeps its real status.
+  Future<lanis.DetailedLesson> _loadDetails(lanis.Lesson lesson) async {
+    final page = await _gateway.lessonDetails(lesson.courseURL);
+    if (_gateway.accountType == 'parent') {
+      final current = lesson.currentEntry?.entryID;
+      for (final e in page.history) {
+        if (e.entryID != current) e.homework?.homeWorkDone = true;
+      }
+    }
+    return page;
   }
 
   Future<lanis.Lessons> _loadLessons() async {

@@ -6,6 +6,13 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.26.3] – 2026-11-20
+
+### Fixed
+- Parent accounts: the full homework list („alle“) and the course history showed every older
+  homework as open. The portal gives parents a done/open marker only for the latest entry of each
+  course, so older entries now count as done.
+
 ## [0.26.2] – 2026-11-20
 
 ### Fixed
