@@ -7,6 +7,7 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 ## [Unreleased]
 
 ## [0.27.0] – 2026-11-23
+
 ### Added
 - The server has an identity: a UUID created on the first start (kept in the database; `SERVER_ID`
   in `config.env` overrides it). `GET /healthz` reports it as `id`, and `install.sh` announces it
