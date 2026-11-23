@@ -81,6 +81,20 @@ void main() {
       expect(await body(r), {'status': 'ok', 'app': 'lumo'});
     });
 
+    test('healthz reports the server id', () async {
+      final h = Api(
+        service: service,
+        passwordHash: _hash,
+        serverId: '0b9b6f1e-2c1d-4c55-9a52-5d2f6a3f3a11',
+      ).handler;
+      final r = await h(Request('GET', Uri.parse('http://x/healthz')));
+      expect(await body(r), {
+        'status': 'ok',
+        'app': 'lumo',
+        'id': '0b9b6f1e-2c1d-4c55-9a52-5d2f6a3f3a11',
+      });
+    });
+
     test('data endpoints require login', () async {
       final r = await send('GET', '/api/timetable');
       expect(r.statusCode, 401);

@@ -126,7 +126,7 @@ config file applies again.
 **Name in the network:** the server itself does not announce a name. On Linux `install.sh`
 installs `avahi-daemon`, which announces the machine as `<hostname>.local` (the Proxmox container
 `lumo`: `http://lumo.local:8080`). Windows and macOS announce their computer name the same way.
-`install.sh` also announces the service `_lumo._tcp` (TXT `app=lumo`, the `PORT` from
+`install.sh` also announces the service `_lumo._tcp` (TXT `app=lumo` and `id=<uuid>`, the `PORT` from
 `config.env`) so that clients like the Home Assistant integration discover the server; after
 changing `PORT`, run `install.sh` again to update the announcement. The desktop apps do not
 announce the service.
@@ -231,7 +231,7 @@ All responses are JSON. Data endpoints need the session cookie from the login.
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/healthz` | `{"status": "ok", "app": "lumo"}`, no login |
+| GET | `/healthz` | `{"status": "ok", "app": "lumo", "id": "<uuid>"}`, no login |
 | POST | `/api/auth/login` | body `{"password": "…"}`, `Content-Type: application/json`; sets cookie `sph_session` |
 | POST | `/api/auth/logout` | |
 | GET | `/api/auth/me` | `{"authenticated": bool}` |

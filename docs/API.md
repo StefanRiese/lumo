@@ -90,8 +90,11 @@ Ends the session and deletes the cookie. → `200 {"authenticated": false}`
 
 ### `GET /healthz`
 
-`200 {"status": "ok", "app": "lumo"}`. Needs no login; for monitoring and to
-detect a running instance.
+`200 {"status": "ok", "app": "lumo", "id": "<uuid>"}`. Needs no login; for monitoring and to
+detect a running instance. `id` is the identity of the server (a UUID, created on the first start
+and kept in the database, or `SERVER_ID` from `config.env`). It does not change with the
+address, so a client can tell that two addresses (IPv4, IPv6, name) are the same server. Servers
+before 0.27.0 have no `id`.
 
 ## Data endpoints
 

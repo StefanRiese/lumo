@@ -6,6 +6,13 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+## [0.27.0] – 2026-11-23
+### Added
+- The server has an identity: a UUID created on the first start (kept in the database; `SERVER_ID`
+  in `config.env` overrides it). `GET /healthz` reports it as `id`, and `install.sh` announces it
+  in the mDNS record (`id=<uuid>`), so clients like the Home Assistant integration recognise the
+  server whatever address (IPv4, IPv6, name) they reach it by.
+
 ## [0.26.3] – 2026-11-20
 
 ### Fixed

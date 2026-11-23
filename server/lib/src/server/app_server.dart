@@ -14,6 +14,7 @@ import '../untis/untis.dart';
 import '../config/accounts.dart';
 import '../config/app_config.dart';
 import '../config/migrate_accounts.dart';
+import '../config/server_id.dart';
 import '../config/env.dart';
 import '../config/server_settings.dart';
 import '../desktop/build_info.g.dart';
@@ -263,6 +264,7 @@ class AppServer implements ServerControl {
     // Routes the requests to the accounts; serves no account itself.
     final api = Api(
       log: info,
+      serverId: loadServerId(db, configured: env['SERVER_ID']),
       passwordHash: config.appPasswordHash,
       sessions: SessionStore(ttl: config.sessionTtl, database: db),
       cookieSecure: config.cookieSecure,

@@ -116,6 +116,9 @@ class Api {
   /// Id of the account this instance serves, for the log ('' = none).
   final String accountId;
 
+  /// Identity of this server (UUID), reported by `GET /healthz`; '' = none.
+  final String serverId;
+
   /// Instances of the accounts by id, set up by the server: each serves the
   /// data endpoints of one account. They share sessions, login limit, update
   /// and server control with the instance that routes to them.
@@ -191,6 +194,7 @@ class Api {
   Api({
     this.log,
     this.accountId = '',
+    this.serverId = '',
     this.service,
     required this.passwordHash,
     SessionStore? sessions,
@@ -248,7 +252,11 @@ class Api {
     final router = Router(notFoundHandler: _notFound)
       ..get(
         '/healthz',
-        (Request r) => _json(200, {'status': 'ok', 'app': 'lumo'}),
+        (Request r) => _json(200, {
+          'status': 'ok',
+          'app': 'lumo',
+          if (serverId.isNotEmpty) 'id': serverId,
+        }),
       )
       ..post('/api/auth/login', _login)
       ..post('/api/auth/logout', _logout)

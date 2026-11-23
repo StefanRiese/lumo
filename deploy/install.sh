@@ -343,6 +343,18 @@ ensure_avahi() {
     warn "avahi-daemon läuft nicht – erreichbar nur über die IP-Adresse"
 }
 
+# The identity of the server (UUID): kept in config.env so that the announcement (mDNS, `id=`)
+# and GET /healthz (`id`) agree. Created once, never changed.
+ensure_server_id() {
+  local id
+  id=$(config_get SERVER_ID)
+  if [[ -z $id ]]; then
+    id=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || uuidgen 2>/dev/null || true)
+    [[ -z $id ]] || config_set SERVER_ID "$id"
+  fi
+  printf '%s' "$id"
+}
+
 # Announces the server as a service (_lumo._tcp, mDNS) so clients such as the Home Assistant
 # integration find it without typing an address. The port is the one in config.env at the
 # time of install/update: run `install.sh` again after changing PORT.
@@ -352,6 +364,10 @@ announce_service() {
   local port
   port=$(config_get PORT)
   [[ $port =~ ^[0-9]{1,5}$ ]] || port=8080
+  local id id_record=''
+  id=$(ensure_server_id)
+  [[ -z $id ]] || id_record="
+    <txt-record>id=$id</txt-record>"
   cat > "$AVAHI_SERVICE_FILE" <<EOF
 <?xml version="1.0" standalone='no'?>
 <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
@@ -361,7 +377,7 @@ announce_service() {
   <service>
     <type>_lumo._tcp</type>
     <port>$port</port>
-    <txt-record>app=lumo</txt-record>
+    <txt-record>app=lumo</txt-record>$id_record
   </service>
 </service-group>
 EOF
