@@ -6,6 +6,10 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Changed
+- Updated liblanis to 0.3.4 (more robust re-authentication and error handling, distinct login
+  errors for parent accounts) and sqlite3 to 3.9.2.
+
 ## [0.27.0] – 2026-11-23
 
 ### Added
