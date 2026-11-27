@@ -231,7 +231,7 @@ All responses are JSON. Data endpoints need the session cookie from the login.
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/healthz` | `{"status": "ok", "app": "lumo", "id": "<uuid>"}`, no login |
+| GET | `/healthz` | `{"status": "ok", "app": "lumo", "id": "<uuid>", "version": "v0.28.0", "setup": false}`, no login |
 | POST | `/api/auth/login` | body `{"password": "…"}`, `Content-Type: application/json`; sets cookie `sph_session` |
 | POST | `/api/auth/logout` | |
 | GET | `/api/auth/me` | `{"authenticated": bool}` |

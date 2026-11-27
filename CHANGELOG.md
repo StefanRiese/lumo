@@ -6,6 +6,11 @@ Pushing a tag `vX.Y.Z` builds and publishes the release (see `deploy/README.md`)
 
 ## [Unreleased]
 
+### Added
+- `GET /healthz` also reports the installed `version` and whether the server is still in setup
+  mode (`setup`), so monitoring and clients can tell "running but not set up" from "running"
+  without a login.
+
 ## [0.27.1] – 2026-11-25
 
 ### Changed

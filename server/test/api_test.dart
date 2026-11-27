@@ -95,6 +95,25 @@ void main() {
       });
     });
 
+    test('healthz reports version and setup state when known', () async {
+      final api = Api(service: service, passwordHash: _hash)
+        ..update = UpdateService(
+          currentVersion: 'v1.2.3',
+          mode: UpdateMode.manual,
+          dataDir: Directory.systemTemp.path,
+          checkEnabled: false,
+          onReadyToRestart: () async {},
+        );
+      final r = await api.handler(
+        Request('GET', Uri.parse('http://x/healthz')),
+      );
+      expect(await body(r), {
+        'status': 'ok',
+        'app': 'lumo',
+        'version': 'v1.2.3',
+      });
+    });
+
     test('data endpoints require login', () async {
       final r = await send('GET', '/api/timetable');
       expect(r.statusCode, 401);

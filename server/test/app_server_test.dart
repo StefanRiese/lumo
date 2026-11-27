@@ -176,6 +176,7 @@ void main() {
       );
 
       expect((await call('GET', '/api/setup')).body, {'setupRequired': true});
+      expect((await call('GET', '/healthz')).body['setup'], isTrue);
       expect((await call('GET', '/api/timetable')).status, 503);
       final login = await call(
         'POST',

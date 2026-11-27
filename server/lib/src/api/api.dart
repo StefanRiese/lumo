@@ -256,6 +256,8 @@ class Api {
           'status': 'ok',
           'app': 'lumo',
           if (serverId.isNotEmpty) 'id': serverId,
+          'version': ?update?.currentVersion,
+          if (control != null) 'setup': control!.setupRequired,
         }),
       )
       ..post('/api/auth/login', _login)
